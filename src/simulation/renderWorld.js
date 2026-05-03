@@ -1,0 +1,102 @@
+import {
+  CREATURE_RADIUS,
+  FOOD_RADIUS,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+} from './constants.js';
+
+export function drawWorld(canvas, world) {
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  const pixelRatio = window.devicePixelRatio || 1;
+  const targetWidth = Math.max(1, Math.floor(width * pixelRatio));
+  const targetHeight = Math.max(1, Math.floor(height * pixelRatio));
+
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+  }
+
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = '#14171a';
+  context.fillRect(0, 0, width, height);
+
+  const scale = Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
+  const worldPixelWidth = WORLD_WIDTH * scale;
+  const worldPixelHeight = WORLD_HEIGHT * scale;
+  const offsetX = (width - worldPixelWidth) / 2;
+  const offsetY = (height - worldPixelHeight) / 2;
+
+  context.save();
+  context.translate(offsetX, offsetY);
+  context.scale(scale, scale);
+
+  drawGrid(context);
+  drawFoods(context, world.foods);
+  drawCreatures(context, world.creatures);
+  drawWorldBorder(context);
+
+  context.restore();
+}
+
+function drawGrid(context) {
+  context.strokeStyle = 'rgba(255, 255, 255, 0.045)';
+  context.lineWidth = 1;
+
+  for (let x = 0; x <= WORLD_WIDTH; x += 50) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, WORLD_HEIGHT);
+    context.stroke();
+  }
+
+  for (let y = 0; y <= WORLD_HEIGHT; y += 50) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(WORLD_WIDTH, y);
+    context.stroke();
+  }
+}
+
+function drawFoods(context, foods) {
+  context.fillStyle = '#45d65d';
+
+  for (const food of foods) {
+    context.beginPath();
+    context.arc(food.x, food.y, FOOD_RADIUS, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function drawCreatures(context, creatures) {
+  for (const creature of creatures) {
+    context.beginPath();
+    context.fillStyle = '#4aa8ff';
+    context.arc(creature.x, creature.y, CREATURE_RADIUS, 0, Math.PI * 2);
+    context.fill();
+
+    context.beginPath();
+    context.fillStyle = 'rgba(255, 255, 255, 0.64)';
+    context.arc(
+      creature.x + Math.cos(creature.heading) * CREATURE_RADIUS * 0.78,
+      creature.y + Math.sin(creature.heading) * CREATURE_RADIUS * 0.78,
+      1.15,
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
+}
+
+function drawWorldBorder(context) {
+  context.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  context.lineWidth = 2;
+  context.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+}
