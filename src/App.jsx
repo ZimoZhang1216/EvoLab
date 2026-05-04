@@ -38,26 +38,31 @@ export default function App() {
       </header>
 
       <main className="workspace">
-        <section className="simulation-panel" aria-label="模拟世界">
-          <SimulationCanvas canvasRef={canvasRef} />
+        <section className="main-column" aria-label="模拟与基因监测">
+          <section className="simulation-panel" aria-label="模拟世界">
+            <SimulationCanvas canvasRef={canvasRef} />
+          </section>
+
+          <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
         </section>
 
-        <section className="operation-panel" aria-label="状态与控制">
-          <StatsPanel stats={stats} />
-          <ControlsPanel
-            isRunning={isRunning}
-            settings={settings}
-            onStart={start}
-            onPause={pause}
-            onReset={reset}
-            onSettingChange={updateSetting}
-            experimentEvents={experimentEvents}
-            isMutationStormActive={isMutationStormActive}
-          />
-        </section>
+        <aside className="utility-column" aria-label="状态、控制与说明">
+          <section className="operation-panel" aria-label="状态与控制">
+            <StatsPanel stats={stats} />
+            <ControlsPanel
+              isRunning={isRunning}
+              settings={settings}
+              onStart={start}
+              onPause={pause}
+              onReset={reset}
+              onSettingChange={updateSetting}
+              experimentEvents={experimentEvents}
+              isMutationStormActive={isMutationStormActive}
+            />
+          </section>
 
-        <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
-        <MechanismPanel />
+          <MechanismPanel />
+        </aside>
       </main>
     </div>
   );

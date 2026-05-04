@@ -187,11 +187,16 @@ h3 {
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
-  grid-template-areas:
-    "simulation operations"
-    "genes mechanism";
   gap: 20px;
-  align-items: stretch;
+  align-items: start;
+}
+
+.main-column,
+.utility-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .simulation-panel,
@@ -203,7 +208,6 @@ h3 {
 }
 
 .simulation-panel {
-  grid-area: simulation;
   overflow: hidden;
   padding: 12px;
 }
@@ -219,7 +223,6 @@ h3 {
 }
 
 .operation-panel {
-  grid-area: operations;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -396,13 +399,12 @@ input[type='range']::-moz-range-thumb {
 }
 
 .gene-panel {
-  grid-area: genes;
   min-width: 0;
 }
 
 .gene-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -485,9 +487,8 @@ input[type='range']::-moz-range-thumb {
 }
 
 .mechanism-panel {
-  grid-area: mechanism;
   color: #bfd5e4;
-  max-height: 280px;
+  max-height: 360px;
   overflow: auto;
 }
 
@@ -546,25 +547,11 @@ input[type='range']::-moz-range-thumb {
 
   .workspace {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "simulation"
-      "operations"
-      "genes"
-      "mechanism";
   }
 
   .operation-panel {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .gene-panel,
-  .mechanism-panel {
-    grid-column: 1 / -1;
-  }
-
-  .gene-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .mechanism-panel {
@@ -603,11 +590,6 @@ input[type='range']::-moz-range-thumb {
 
   .range-label {
     grid-template-columns: minmax(0, 1fr) 68px;
-  }
-
-  .gene-panel,
-  .mechanism-panel {
-    grid-column: auto;
   }
 
   .gene-grid,
