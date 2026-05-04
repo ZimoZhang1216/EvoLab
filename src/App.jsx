@@ -32,7 +32,7 @@ export default function App() {
           <p className="eyebrow">Evolution Lab</p>
           <div className="title-row">
             <h1>EvoLab：进化模拟器</h1>
-            <span className="version-badge">V-2.3</span>
+            <span className="version-badge">V-2.4</span>
           </div>
           <p className="intro">
             观察生物在食物、能量、繁殖和突变压力下的群体演化。

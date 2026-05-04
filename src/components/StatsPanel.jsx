@@ -4,11 +4,11 @@ function formatNumber(value, digits = 1) {
 
 export function StatsPanel({ stats }) {
   const items = [
-    ['population', stats.population.toString()],
-    ['food', stats.foodCount.toString()],
-    ['average speed', formatNumber(stats.averageSpeed)],
-    ['average vision', formatNumber(stats.averageVision)],
-    ['average energy', formatNumber(stats.averageEnergy)],
+    ['种群', stats.population.toString()],
+    ['食物', stats.foodCount.toString()],
+    ['均速', formatNumber(stats.averageSpeed)],
+    ['视野', formatNumber(stats.averageVision)],
+    ['能量', formatNumber(stats.averageEnergy)],
   ];
 
   return (
