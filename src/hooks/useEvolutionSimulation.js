@@ -19,6 +19,7 @@ const MUTATION_STORM_MIN_RATE = 0.18;
 const GENE_SAMPLE_INTERVAL_MS = 1000;
 const MAX_GENE_HISTORY_POINTS = 300;
 const MAX_STEADY_HISTORY_POINTS = 300;
+const DEFAULT_DISPLAY_MODE = 'lineage';
 
 function createMutationStormSettings(settings) {
   const maxMutationRate = TRAIT_LIMITS.mutationRate[1];
@@ -36,7 +37,7 @@ export function useEvolutionSimulation() {
   const canvasRef = useRef(null);
   const settingsRef = useRef(DEFAULT_SETTINGS);
   const worldRef = useRef(createWorld(DEFAULT_SETTINGS));
-  const displayModeRef = useRef('normal');
+  const displayModeRef = useRef(DEFAULT_DISPLAY_MODE);
   const mutationStormActiveRef = useRef(false);
   const mutationStormTimeoutRef = useRef(null);
   const geneSampleIndexRef = useRef(0);
@@ -54,7 +55,7 @@ export function useEvolutionSimulation() {
   );
   const [isRunning, setIsRunning] = useState(false);
   const [isMutationStormActive, setIsMutationStormActive] = useState(false);
-  const [displayMode, setDisplayMode] = useState('normal');
+  const [displayMode, setDisplayMode] = useState(DEFAULT_DISPLAY_MODE);
 
   useEffect(() => {
     settingsRef.current = settings;
