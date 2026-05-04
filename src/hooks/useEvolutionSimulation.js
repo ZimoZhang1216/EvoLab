@@ -16,6 +16,7 @@ const MUTATION_STORM_MULTIPLIER = 3;
 const MUTATION_STORM_MIN_RATE = 0.18;
 const GENE_SAMPLE_INTERVAL_MS = 1000;
 const MAX_GENE_HISTORY_POINTS = 300;
+const MAX_STEADY_HISTORY_POINTS = 300;
 
 function createMutationStormSettings(settings) {
   const maxMutationRate = TRAIT_LIMITS.mutationRate[1];
@@ -36,10 +37,12 @@ export function useEvolutionSimulation() {
   const mutationStormActiveRef = useRef(false);
   const mutationStormTimeoutRef = useRef(null);
   const geneSampleIndexRef = useRef(0);
+  const steadySampleIndexRef = useRef(0);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [stats, setStats] = useState(calculateStats(worldRef.current));
   const [geneStats, setGeneStats] = useState(calculateGeneStats(worldRef.current));
   const [geneHistory, setGeneHistory] = useState([]);
+  const [steadyHistory, setSteadyHistory] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isMutationStormActive, setIsMutationStormActive] = useState(false);
 
@@ -47,34 +50,54 @@ export function useEvolutionSimulation() {
     settingsRef.current = settings;
   }, [settings]);
 
-  const sampleGenes = useCallback(() => {
+  const sampleMonitoring = useCallback(() => {
+    const nextStats = calculateStats(worldRef.current);
     const nextGeneStats = calculateGeneStats(worldRef.current);
+    setStats(nextStats);
     setGeneStats(nextGeneStats);
 
-    if (nextGeneStats.population === 0) {
-      return;
-    }
-
-    const nextSample = {
-      id: geneSampleIndexRef.current,
-      values: Object.fromEntries(
-        Object.entries(nextGeneStats.genes).map(([key, gene]) => [
-          key,
-          gene.average,
-        ]),
-      ),
+    const nextSteadySample = {
+      id: steadySampleIndexRef.current,
+      population: nextStats.population,
+      foodCount: nextStats.foodCount,
+      averageSpeed: nextStats.averageSpeed,
+      averageVision: nextStats.averageVision,
+      averageEnergy: nextStats.averageEnergy,
     };
-    geneSampleIndexRef.current += 1;
+    steadySampleIndexRef.current += 1;
 
-    setGeneHistory((current) => {
-      const next = current.concat(nextSample);
+    setSteadyHistory((current) => {
+      const next = current.concat(nextSteadySample);
 
-      if (next.length > MAX_GENE_HISTORY_POINTS) {
-        return next.slice(next.length - MAX_GENE_HISTORY_POINTS);
+      if (next.length > MAX_STEADY_HISTORY_POINTS) {
+        return next.slice(next.length - MAX_STEADY_HISTORY_POINTS);
       }
 
       return next;
     });
+
+    if (nextGeneStats.population > 0) {
+      const nextGeneSample = {
+        id: geneSampleIndexRef.current,
+        values: Object.fromEntries(
+          Object.entries(nextGeneStats.genes).map(([key, gene]) => [
+            key,
+            gene.average,
+          ]),
+        ),
+      };
+      geneSampleIndexRef.current += 1;
+
+      setGeneHistory((current) => {
+        const next = current.concat(nextGeneSample);
+
+        if (next.length > MAX_GENE_HISTORY_POINTS) {
+          return next.slice(next.length - MAX_GENE_HISTORY_POINTS);
+        }
+
+        return next;
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -105,7 +128,7 @@ export function useEvolutionSimulation() {
       }
 
       if (isRunning && time - previousGeneSampleTime > GENE_SAMPLE_INTERVAL_MS) {
-        sampleGenes();
+        sampleMonitoring();
         previousGeneSampleTime = time;
       }
 
@@ -117,7 +140,7 @@ export function useEvolutionSimulation() {
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [isRunning, sampleGenes]);
+  }, [isRunning, sampleMonitoring]);
 
   useEffect(() => {
     return () => {
@@ -160,9 +183,11 @@ export function useEvolutionSimulation() {
     const nextWorld = createWorld(settingsRef.current);
     worldRef.current = nextWorld;
     geneSampleIndexRef.current = 0;
+    steadySampleIndexRef.current = 0;
     setStats(calculateStats(nextWorld));
     setGeneStats(calculateGeneStats(nextWorld));
     setGeneHistory([]);
+    setSteadyHistory([]);
     setIsRunning(false);
 
     if (canvasRef.current) {
@@ -224,6 +249,7 @@ export function useEvolutionSimulation() {
     stats,
     geneStats,
     geneHistory,
+    steadyHistory,
     experimentEvents: {
       dropFood,
       triggerFamine,

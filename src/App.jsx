@@ -3,6 +3,7 @@ import { GenePanel } from './components/GenePanel.jsx';
 import { MechanismPanel } from './components/MechanismPanel.jsx';
 import { SimulationCanvas } from './components/SimulationCanvas.jsx';
 import { StatsPanel } from './components/StatsPanel.jsx';
+import { SteadyStatePanel } from './components/SteadyStatePanel.jsx';
 import { useEvolutionSimulation } from './hooks/useEvolutionSimulation.js';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
     stats,
     geneStats,
     geneHistory,
+    steadyHistory,
     experimentEvents,
     start,
     pause,
@@ -43,7 +45,10 @@ export default function App() {
             <SimulationCanvas canvasRef={canvasRef} />
           </section>
 
-          <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
+          <div className="monitor-row">
+            <SteadyStatePanel stats={stats} history={steadyHistory} />
+            <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
+          </div>
         </section>
 
         <aside className="utility-column" aria-label="状态、控制与说明">
