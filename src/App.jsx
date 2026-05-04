@@ -16,11 +16,13 @@ export default function App() {
     geneStats,
     geneHistory,
     steadyHistory,
+    environmentState,
     experimentEvents,
     start,
     pause,
     reset,
     updateSetting,
+    updateEnvironmentMode,
   } = useEvolutionSimulation();
 
   return (
@@ -61,8 +63,10 @@ export default function App() {
               onPause={pause}
               onReset={reset}
               onSettingChange={updateSetting}
+              onEnvironmentModeChange={updateEnvironmentMode}
               experimentEvents={experimentEvents}
               isMutationStormActive={isMutationStormActive}
+              environmentState={environmentState}
             />
           </section>
 

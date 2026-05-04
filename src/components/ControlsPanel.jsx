@@ -1,3 +1,5 @@
+import { ENVIRONMENT_MODES } from '../simulation/environmentModes.js';
+
 const sliderMeta = {
   simulationSpeed: {
     label: '模拟速度',
@@ -37,9 +39,13 @@ export function ControlsPanel({
   onPause,
   onReset,
   onSettingChange,
+  onEnvironmentModeChange,
   experimentEvents,
   isMutationStormActive,
+  environmentState,
 }) {
+  const environmentModes = Object.values(ENVIRONMENT_MODES);
+
   return (
     <section className="panel-block" aria-label="模拟控制">
       <h2>控制面板</h2>
@@ -72,6 +78,34 @@ export function ControlsPanel({
             />
           </label>
         ))}
+      </div>
+
+      <div className="environment-section">
+        <div className="section-heading">
+          <h3>环境模式</h3>
+          <span className="environment-current">
+            {environmentState.label}
+            {environmentState.seasonLabel ? ` · ${environmentState.seasonLabel}` : ''}
+          </span>
+        </div>
+
+        <div className="environment-grid">
+          {environmentModes.map((mode) => (
+            <button
+              type="button"
+              className={
+                environmentState.id === mode.id
+                  ? 'environment-option active'
+                  : 'environment-option'
+              }
+              key={mode.id}
+              onClick={() => onEnvironmentModeChange(mode.id)}
+            >
+              <span>{mode.label}</span>
+              <small>{mode.description}</small>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="event-section">

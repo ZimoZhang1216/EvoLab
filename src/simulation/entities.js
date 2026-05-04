@@ -7,11 +7,11 @@ import {
 } from './constants.js';
 import { clamp, mutateTrait, randomHeading, randomRange } from './random.js';
 
-export function createFood(id) {
+export function createFood(id, position = {}) {
   return {
     id,
-    x: randomRange(12, WORLD_WIDTH - 12),
-    y: randomRange(12, WORLD_HEIGHT - 12),
+    x: position.x ?? randomRange(12, WORLD_WIDTH - 12),
+    y: position.y ?? randomRange(12, WORLD_HEIGHT - 12),
   };
 }
 

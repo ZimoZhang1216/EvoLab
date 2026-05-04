@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS = {
   simulationSpeed: 1,
   foodSpawnRate: 3,
   mutationRate: 0.08,
+  environmentMode: 'normal',
 };
 
 export const TRAIT_LIMITS = {

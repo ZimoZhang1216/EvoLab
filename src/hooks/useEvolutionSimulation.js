@@ -10,6 +10,7 @@ import {
   stepWorld,
 } from '../simulation/world.js';
 import { drawWorld } from '../simulation/renderWorld.js';
+import { getEnvironmentState } from '../simulation/environmentModes.js';
 
 const MUTATION_STORM_DURATION_MS = 12000;
 const MUTATION_STORM_MULTIPLIER = 3;
@@ -43,6 +44,9 @@ export function useEvolutionSimulation() {
   const [geneStats, setGeneStats] = useState(calculateGeneStats(worldRef.current));
   const [geneHistory, setGeneHistory] = useState([]);
   const [steadyHistory, setSteadyHistory] = useState([]);
+  const [environmentState, setEnvironmentState] = useState(
+    getEnvironmentState(DEFAULT_SETTINGS.environmentMode, worldRef.current.elapsedTime),
+  );
   const [isRunning, setIsRunning] = useState(false);
   const [isMutationStormActive, setIsMutationStormActive] = useState(false);
 
@@ -55,6 +59,12 @@ export function useEvolutionSimulation() {
     const nextGeneStats = calculateGeneStats(worldRef.current);
     setStats(nextStats);
     setGeneStats(nextGeneStats);
+    setEnvironmentState(
+      getEnvironmentState(
+        settingsRef.current.environmentMode,
+        worldRef.current.elapsedTime,
+      ),
+    );
 
     const nextSteadySample = {
       id: steadySampleIndexRef.current,
@@ -124,6 +134,12 @@ export function useEvolutionSimulation() {
 
       if (time - previousStatsTime > 180) {
         setStats(calculateStats(worldRef.current));
+        setEnvironmentState(
+          getEnvironmentState(
+            settingsRef.current.environmentMode,
+            worldRef.current.elapsedTime,
+          ),
+        );
         previousStatsTime = time;
       }
 
@@ -154,6 +170,9 @@ export function useEvolutionSimulation() {
     const world = worldRef.current;
     setStats(calculateStats(world));
     setGeneStats(calculateGeneStats(world));
+    setEnvironmentState(
+      getEnvironmentState(settingsRef.current.environmentMode, world.elapsedTime),
+    );
 
     if (canvasRef.current) {
       drawWorld(canvasRef.current, world);
@@ -188,6 +207,9 @@ export function useEvolutionSimulation() {
     setGeneStats(calculateGeneStats(nextWorld));
     setGeneHistory([]);
     setSteadyHistory([]);
+    setEnvironmentState(
+      getEnvironmentState(settingsRef.current.environmentMode, nextWorld.elapsedTime),
+    );
     setIsRunning(false);
 
     if (canvasRef.current) {
@@ -205,6 +227,21 @@ export function useEvolutionSimulation() {
       };
 
       settingsRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const updateEnvironmentMode = useCallback((mode) => {
+    setSettings((current) => {
+      const next = {
+        ...current,
+        environmentMode: mode,
+      };
+
+      settingsRef.current = next;
+      setEnvironmentState(
+        getEnvironmentState(mode, worldRef.current.elapsedTime),
+      );
       return next;
     });
   }, []);
@@ -250,6 +287,7 @@ export function useEvolutionSimulation() {
     geneStats,
     geneHistory,
     steadyHistory,
+    environmentState,
     experimentEvents: {
       dropFood,
       triggerFamine,
@@ -260,5 +298,6 @@ export function useEvolutionSimulation() {
     pause,
     reset,
     updateSetting,
+    updateEnvironmentMode,
   };
 }

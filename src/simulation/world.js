@@ -15,6 +15,10 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from './constants.js';
+import {
+  createFoodPosition,
+  getEnvironmentState,
+} from './environmentModes.js';
 import { createCreature, createFood, reproduceCreature } from './entities.js';
 import { clamp, distanceSquared, randomRange } from './random.js';
 
@@ -29,6 +33,7 @@ export const GENE_KEYS = [
 export function createWorld(settings) {
   const world = {
     tick: 0,
+    elapsedTime: 0,
     foodSpawnAccumulator: 0,
     nextCreatureId: 1,
     nextFoodId: 1,
@@ -42,7 +47,7 @@ export function createWorld(settings) {
   }
 
   for (let index = 0; index < INITIAL_FOOD_COUNT; index += 1) {
-    addFood(world);
+    addFood(world, getEnvironmentState(settings.environmentMode, world.elapsedTime));
   }
 
   return world;
@@ -50,6 +55,7 @@ export function createWorld(settings) {
 
 export function stepWorld(world, settings, deltaSeconds) {
   world.tick += 1;
+  world.elapsedTime += deltaSeconds;
   spawnFood(world, settings, deltaSeconds);
 
   const survivors = [];
@@ -273,18 +279,25 @@ function spawnFood(world, settings, deltaSeconds) {
     return;
   }
 
-  world.foodSpawnAccumulator += settings.foodSpawnRate * deltaSeconds;
+  const environmentState = getEnvironmentState(
+    settings.environmentMode,
+    world.elapsedTime,
+  );
+  world.foodSpawnAccumulator +=
+    settings.foodSpawnRate * environmentState.spawnMultiplier * deltaSeconds;
 
   while (
     world.foodSpawnAccumulator >= 1 &&
     world.foods.length < MAX_FOOD_COUNT
   ) {
-    addFood(world);
+    addFood(world, environmentState);
     world.foodSpawnAccumulator -= 1;
   }
 }
 
-function addFood(world) {
-  world.foods.push(createFood(world.nextFoodId));
+function addFood(world, environmentState = getEnvironmentState()) {
+  world.foods.push(
+    createFood(world.nextFoodId, createFoodPosition(environmentState)),
+  );
   world.nextFoodId += 1;
 }
