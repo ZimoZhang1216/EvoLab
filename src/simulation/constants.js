@@ -11,6 +11,10 @@ export const FOOD_RADIUS = 2.6;
 export const FOOD_ENERGY = 34;
 export const ENERGY_COST_PER_DISTANCE = 0.028;
 export const BASE_ENERGY_COST_PER_SECOND = 0.22;
+export const SPEED_COST_REFERENCE = 43;
+export const SPEED_COST_SCALE = 0.35;
+export const VISION_COST_REFERENCE = 105;
+export const VISION_COST_PER_POINT = 0.0012;
 export const WANDER_TURN_RATE = 2.6;
 
 export const DEFAULT_SETTINGS = {

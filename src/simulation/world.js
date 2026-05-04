@@ -7,6 +7,10 @@ import {
   INITIAL_FOOD_COUNT,
   MAX_CREATURE_COUNT,
   MAX_FOOD_COUNT,
+  SPEED_COST_REFERENCE,
+  SPEED_COST_SCALE,
+  VISION_COST_PER_POINT,
+  VISION_COST_REFERENCE,
   WANDER_TURN_RATE,
   WORLD_HEIGHT,
   WORLD_WIDTH,
@@ -202,8 +206,18 @@ function updateCreature(creature, world, deltaSeconds) {
   creature.y += Math.sin(creature.heading) * moveDistance;
   keepCreatureInBounds(creature);
 
+  const speedCostMultiplier = 1 + Math.max(
+    0,
+    (creature.speed - SPEED_COST_REFERENCE) / SPEED_COST_REFERENCE,
+  ) * SPEED_COST_SCALE;
+  const visionMetabolicCost = Math.max(
+    0,
+    creature.vision - VISION_COST_REFERENCE,
+  ) * VISION_COST_PER_POINT;
+
   creature.energy -=
-    moveDistance * ENERGY_COST_PER_DISTANCE + BASE_ENERGY_COST_PER_SECOND * deltaSeconds;
+    moveDistance * ENERGY_COST_PER_DISTANCE * speedCostMultiplier +
+    (BASE_ENERGY_COST_PER_SECOND + visionMetabolicCost) * deltaSeconds;
 
   if (targetFood && canEat(creature, targetFood)) {
     const foodIndex = world.foods.indexOf(targetFood);
