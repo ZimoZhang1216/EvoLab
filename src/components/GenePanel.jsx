@@ -49,7 +49,7 @@ function formatGeneValue(key, value) {
   return value.toFixed(1);
 }
 
-function buildTrendPoints(history, key, width, height) {
+function buildTrendPoints(history, key, width, height, padding) {
   const values = history
     .map((sample) => sample.values[key])
     .filter((value) => Number.isFinite(value));
@@ -66,20 +66,23 @@ function buildTrendPoints(history, key, width, height) {
 
     return {
       values,
-      points: `0,${y} ${width},${y}`,
+      points: `${padding.left},${y} ${width - padding.right},${y}`,
     };
   }
 
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
 
   return {
     values,
     points: values
       .map((value, index) => {
-        const x = (index / (values.length - 1)) * width;
-        const y = height - ((value - min) / range) * height;
+        const x = padding.left + (index / (values.length - 1)) * chartWidth;
+        const y =
+          padding.top + chartHeight - ((value - min) / range) * chartHeight;
 
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       })
@@ -90,33 +93,58 @@ function buildTrendPoints(history, key, width, height) {
 function GeneTrendChart({ history, geneKey }) {
   const width = 168;
   const height = 54;
-  const { values, points } = buildTrendPoints(history, geneKey, width, height);
+  const padding = {
+    top: 5,
+    right: 5,
+    bottom: 5,
+    left: 5,
+  };
+  const { values, points } = buildTrendPoints(
+    history,
+    geneKey,
+    width,
+    height,
+    padding,
+  );
 
   return (
-    <svg
-      className="gene-chart"
-      viewBox={`0 0 ${width} ${height}`}
+    <div
+      className="gene-chart-frame"
       role="img"
       aria-label={`${geneLabels[geneKey].name} ${geneLabels[geneKey].code} 平均值趋势`}
-      preserveAspectRatio="none"
     >
-      <line className="gene-chart-grid" x1="0" y1="18" x2={width} y2="18" />
-      <line className="gene-chart-grid" x1="0" y1="36" x2={width} y2="36" />
-      {values.length > 0 ? (
+      <svg
+        className="gene-chart"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <line
+          className="gene-chart-grid"
+          x1={padding.left}
+          y1="18"
+          x2={width - padding.right}
+          y2="18"
+        />
+        <line
+          className="gene-chart-grid"
+          x1={padding.left}
+          y1="36"
+          x2={width - padding.right}
+          y2="36"
+        />
         <polyline
+          className={values.length > 0 ? 'gene-chart-line' : 'gene-chart-line empty'}
           fill="none"
           points={points}
           stroke={chartColors[geneKey]}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="2.4"
+          strokeWidth="2.2"
         />
-      ) : (
-        <text className="gene-chart-empty" x="50%" y="52%" textAnchor="middle">
-          等待采样
-        </text>
-      )}
-    </svg>
+      </svg>
+      {values.length === 0 && <span className="gene-chart-empty">等待采样</span>}
+    </div>
   );
 }
 
