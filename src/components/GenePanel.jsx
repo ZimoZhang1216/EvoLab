@@ -1,9 +1,24 @@
 const geneLabels = {
-  speed: '速度 speed',
-  vision: '视野 vision',
-  reproductionThreshold: '繁殖阈值 reproductionThreshold',
-  lifespan: '寿命 lifespan',
-  mutationRate: '突变率 mutationRate',
+  speed: {
+    name: '速度',
+    code: 'speed',
+  },
+  vision: {
+    name: '视野',
+    code: 'vision',
+  },
+  reproductionThreshold: {
+    name: '繁殖阈值',
+    code: 'reproductionThreshold',
+  },
+  lifespan: {
+    name: '寿命',
+    code: 'lifespan',
+  },
+  mutationRate: {
+    name: '突变率',
+    code: 'mutationRate',
+  },
 };
 
 const geneOrder = [
@@ -82,7 +97,7 @@ function GeneTrendChart({ history, geneKey }) {
       className="gene-chart"
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={`${geneLabels[geneKey]} 平均值趋势`}
+      aria-label={`${geneLabels[geneKey].name} ${geneLabels[geneKey].code} 平均值趋势`}
       preserveAspectRatio="none"
     >
       <line className="gene-chart-grid" x1="0" y1="18" x2={width} y2="18" />
@@ -129,19 +144,22 @@ export function GenePanel({ geneStats, geneHistory }) {
           return (
             <article className="gene-card" key={geneKey}>
               <div className="gene-card-header">
-                <h3>{geneLabels[geneKey]}</h3>
+                <h3>
+                  {geneLabels[geneKey].name}
+                  <small>{geneLabels[geneKey].code}</small>
+                </h3>
                 <strong>{formatGeneValue(geneKey, gene.average)}</strong>
               </div>
 
               <div className="gene-values">
                 <span>
-                  平均 average <strong>{formatGeneValue(geneKey, gene.average)}</strong>
+                  平均 <strong>{formatGeneValue(geneKey, gene.average)}</strong>
                 </span>
                 <span>
-                  最小 min <strong>{formatGeneValue(geneKey, gene.min)}</strong>
+                  最小 <strong>{formatGeneValue(geneKey, gene.min)}</strong>
                 </span>
                 <span>
-                  最大 max <strong>{formatGeneValue(geneKey, gene.max)}</strong>
+                  最大 <strong>{formatGeneValue(geneKey, gene.max)}</strong>
                 </span>
               </div>
 

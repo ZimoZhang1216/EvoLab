@@ -89,10 +89,10 @@ button.storm-button:hover:not(:disabled) {
 }
 
 .app-shell {
-  width: min(1680px, 100%);
+  width: min(1880px, 100%);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 16px;
+  padding: 14px 18px;
 }
 
 .app-header {
@@ -206,7 +206,7 @@ h3 {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 22vw, 390px);
   gap: 14px;
   align-items: start;
 }
@@ -229,13 +229,13 @@ h3 {
 
 .simulation-panel {
   overflow: hidden;
-  padding: 8px;
+  padding: 7px;
 }
 
 .simulation-canvas {
   display: block;
   width: 100%;
-  height: clamp(300px, 42vh, 430px);
+  height: clamp(360px, 48vh, 540px);
   min-height: 0;
   border: 1px solid rgba(105, 215, 255, 0.18);
   border-radius: 6px;
@@ -250,7 +250,10 @@ h3 {
 
 .monitor-row {
   display: grid;
-  grid-template-columns: minmax(220px, 0.3fr) minmax(280px, 0.36fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(230px, 0.62fr)
+    minmax(310px, 0.84fr)
+    minmax(520px, 1.55fr);
   gap: 14px;
   align-items: start;
 }
@@ -817,13 +820,14 @@ input[type='range']::-moz-range-thumb {
 }
 
 .monitor-row .gene-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
 }
 
 .gene-card {
+  min-width: 0;
   border: 1px solid rgba(86, 132, 166, 0.34);
   border-radius: 7px;
-  padding: 8px;
+  padding: 7px;
   background: #0d1721;
 }
 
@@ -835,8 +839,23 @@ input[type='range']::-moz-range-thumb {
 }
 
 .gene-card-header h3 {
+  min-width: 0;
   line-height: 1.25;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+}
+
+.gene-card-header h3 small {
+  display: block;
+  max-width: 100%;
+  margin-top: 2px;
+  color: #80a6be;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gene-card-header strong {
@@ -857,10 +876,13 @@ input[type='range']::-moz-range-thumb {
   min-width: 0;
   border: 1px solid rgba(105, 215, 255, 0.12);
   border-radius: 6px;
-  padding: 4px;
+  padding: 4px 3px;
   color: #80a6be;
   background: #0a1119;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .gene-values strong {
@@ -1267,7 +1289,11 @@ input[type='range']::-moz-range-thumb {
   }
 
   .gene-card-header h3 {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
+  }
+
+  .gene-card-header h3 small {
+    font-size: 0.52rem;
   }
 
   .gene-card-header strong {
