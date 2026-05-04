@@ -528,6 +528,26 @@ input[type='range']::-moz-range-thumb {
   font-weight: 900;
 }
 
+.steady-summary {
+  display: grid;
+  min-height: 96px;
+  align-content: center;
+  gap: 8px;
+  padding: 16px;
+}
+
+.steady-summary span {
+  color: #80a6be;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.steady-summary strong {
+  color: currentColor;
+  font-size: 1.5rem;
+  line-height: 1.05;
+}
+
 .steady-status.steady {
   color: #b7ffd3;
   border-color: rgba(44, 198, 109, 0.46);

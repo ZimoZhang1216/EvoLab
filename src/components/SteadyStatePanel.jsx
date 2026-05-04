@@ -124,30 +124,6 @@ function getSystemStatus(stats, history, trendAnalyses) {
   return 'evolving';
 }
 
-function formatValue(value, digits) {
-  return Number.isFinite(value) ? value.toFixed(digits) : '0';
-}
-
-function formatPercent(value) {
-  if (!Number.isFinite(value)) {
-    return '0.0%';
-  }
-
-  return `${(value * 100).toFixed(1)}%`;
-}
-
-function getDirectionText(direction) {
-  if (direction === 'up') {
-    return '上升';
-  }
-
-  if (direction === 'down') {
-    return '下降';
-  }
-
-  return '平稳';
-}
-
 export function SteadyStatePanel({ stats, history }) {
   const effectiveHistory =
     history.length > 0
@@ -173,33 +149,12 @@ export function SteadyStatePanel({ stats, history }) {
     <section className="panel-block steady-panel" aria-label="稳态监测">
       <div className="steady-header">
         <h2>稳态监测</h2>
-        <span>{history.length}/300 采样点</span>
       </div>
 
-      <div className={`steady-status ${status}`}>
-        {statusLabels[status]}
+      <div className={`steady-status steady-summary ${status}`}>
+        <span>当前系统状态</span>
+        <strong>{statusLabels[status]}</strong>
       </div>
-
-      {status === 'extinct' ? (
-        <div className="empty-state">种群已灭绝</div>
-      ) : (
-        <div className="steady-list">
-          {metricConfigs.map((metric) => {
-            const analysis = trendAnalyses[metric.key];
-
-            return (
-              <div className="steady-row" key={metric.key}>
-                <span>{metric.label}</span>
-                <strong className={analysis.direction}>
-                  {getDirectionText(analysis.direction)}
-                </strong>
-                <em>{formatPercent(analysis.relativeChange)}</em>
-                <small>{formatValue(analysis.latest, metric.digits)}</small>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </section>
   );
 }
