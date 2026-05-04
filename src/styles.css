@@ -292,7 +292,7 @@ h3 {
 
 .range-label {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
+  grid-template-columns: minmax(0, 1fr) 88px;
   align-items: center;
   gap: 12px;
   color: #c5d9e8;
@@ -784,7 +784,7 @@ input[type='range']::-moz-range-thumb {
   }
 
   .range-label {
-    grid-template-columns: minmax(0, 1fr) 68px;
+    grid-template-columns: minmax(0, 1fr) 82px;
   }
 
   .gene-grid,

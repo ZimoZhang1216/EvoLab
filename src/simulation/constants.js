@@ -29,7 +29,7 @@ export const TRAIT_LIMITS = {
   vision: [35, 220],
   reproductionThreshold: [95, 230],
   lifespan: [45, 210],
-  mutationRate: [0, 0.3],
+  mutationRate: [0, 0.5],
 };
 
 export const DEFAULT_TRAITS = {

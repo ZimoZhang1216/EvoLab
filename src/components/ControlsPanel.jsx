@@ -3,30 +3,38 @@ import { ENVIRONMENT_MODES } from '../simulation/environmentModes.js';
 const sliderMeta = {
   simulationSpeed: {
     label: '模拟速度',
-    min: 0.25,
-    max: 4,
-    step: 0.25,
+    min: 0.05,
+    max: 10,
+    step: 0.05,
     suffix: 'x',
   },
   foodSpawnRate: {
     label: '食物生成率',
     min: 0,
-    max: 12,
-    step: 0.5,
+    max: 50,
+    step: 0.1,
     suffix: '/s',
   },
   mutationRate: {
     label: '突变率',
     min: 0,
-    max: 0.3,
-    step: 0.01,
+    max: 0.5,
+    step: 0.005,
     suffix: '',
   },
 };
 
 function formatControlValue(key, value) {
+  if (key === 'simulationSpeed') {
+    return `${value.toFixed(2)}${sliderMeta[key].suffix}`;
+  }
+
+  if (key === 'foodSpawnRate') {
+    return `${value.toFixed(1)}${sliderMeta[key].suffix}`;
+  }
+
   if (key === 'mutationRate') {
-    return `${Math.round(value * 100)}%`;
+    return `${(value * 100).toFixed(1)}%`;
   }
 
   return `${value}${sliderMeta[key].suffix}`;
