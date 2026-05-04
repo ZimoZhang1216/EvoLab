@@ -6,7 +6,20 @@ import {
 } from './constants.js';
 import { FOOD_PATCHES, FOOD_PATCH_RADIUS } from './environmentModes.js';
 
-export function drawWorld(canvas, world, environmentState) {
+const LINEAGE_COLORS = [
+  '#4aa8ff',
+  '#7cffb2',
+  '#ffd876',
+  '#b68cff',
+  '#ff8fb1',
+  '#5eead4',
+  '#f97316',
+  '#a3e635',
+  '#38bdf8',
+  '#f472b6',
+];
+
+export function drawWorld(canvas, world, environmentState, displayMode = 'normal') {
   const context = canvas.getContext('2d');
 
   if (!context) {
@@ -42,7 +55,7 @@ export function drawWorld(canvas, world, environmentState) {
   drawGrid(context);
   drawPatchBoundaries(context, environmentState);
   drawFoods(context, world.foods);
-  drawCreatures(context, world.creatures);
+  drawCreatures(context, world.creatures, displayMode);
   drawWorldBorder(context);
 
   context.restore();
@@ -103,10 +116,15 @@ function drawFoods(context, foods) {
   }
 }
 
-function drawCreatures(context, creatures) {
+function drawCreatures(context, creatures, displayMode) {
+  const maxGeneration = creatures.reduce(
+    (max, creature) => Math.max(max, creature.generation ?? 0),
+    0,
+  );
+
   for (const creature of creatures) {
     context.beginPath();
-    context.fillStyle = '#4aa8ff';
+    context.fillStyle = getCreatureColor(creature, displayMode, maxGeneration);
     context.arc(creature.x, creature.y, CREATURE_RADIUS, 0, Math.PI * 2);
     context.fill();
 
@@ -121,6 +139,25 @@ function drawCreatures(context, creatures) {
     );
     context.fill();
   }
+}
+
+function getCreatureColor(creature, displayMode, maxGeneration) {
+  if (displayMode === 'generation') {
+    const ratio = maxGeneration > 0 ? (creature.generation ?? 0) / maxGeneration : 0;
+    const hue = 208 - ratio * 168;
+    const lightness = 58 + ratio * 8;
+
+    return `hsl(${hue}, 94%, ${lightness}%)`;
+  }
+
+  if (displayMode === 'lineage') {
+    const lineageId = creature.lineageId ?? creature.id;
+    const colorIndex = Math.abs(lineageId) % LINEAGE_COLORS.length;
+
+    return LINEAGE_COLORS[colorIndex];
+  }
+
+  return '#4aa8ff';
 }
 
 function drawWorldBorder(context) {

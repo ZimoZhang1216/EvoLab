@@ -1,5 +1,6 @@
 import { ControlsPanel } from './components/ControlsPanel.jsx';
 import { GenePanel } from './components/GenePanel.jsx';
+import { GenerationPanel } from './components/GenerationPanel.jsx';
 import { MechanismPanel } from './components/MechanismPanel.jsx';
 import { SimulationCanvas } from './components/SimulationCanvas.jsx';
 import { StatsPanel } from './components/StatsPanel.jsx';
@@ -14,15 +15,18 @@ export default function App() {
     settings,
     stats,
     geneStats,
+    lineageStats,
     geneHistory,
     steadyHistory,
     environmentState,
+    displayMode,
     experimentEvents,
     start,
     pause,
     reset,
     updateSetting,
     updateEnvironmentMode,
+    updateDisplayMode,
   } = useEvolutionSimulation();
 
   return (
@@ -32,7 +36,7 @@ export default function App() {
           <p className="eyebrow">Evolution Lab</p>
           <div className="title-row">
             <h1>EvoLab：进化模拟器</h1>
-            <span className="version-badge">V-2.4</span>
+            <span className="version-badge">V-2.5</span>
           </div>
           <p className="intro">
             观察生物在食物、能量、繁殖和突变压力下的群体演化。
@@ -52,6 +56,7 @@ export default function App() {
 
           <div className="monitor-row">
             <SteadyStatePanel stats={stats} history={steadyHistory} />
+            <GenerationPanel lineageStats={lineageStats} />
             <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
           </div>
         </section>
@@ -67,6 +72,8 @@ export default function App() {
               onReset={reset}
               onSettingChange={updateSetting}
               onEnvironmentModeChange={updateEnvironmentMode}
+              displayMode={displayMode}
+              onDisplayModeChange={updateDisplayMode}
               experimentEvents={experimentEvents}
               isMutationStormActive={isMutationStormActive}
               environmentState={environmentState}

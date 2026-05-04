@@ -24,6 +24,21 @@ const sliderMeta = {
   },
 };
 
+const displayModeOptions = [
+  {
+    id: 'normal',
+    label: '普通',
+  },
+  {
+    id: 'generation',
+    label: '世代',
+  },
+  {
+    id: 'lineage',
+    label: '谱系',
+  },
+];
+
 function formatControlValue(key, value) {
   if (key === 'simulationSpeed') {
     return `${value.toFixed(2)}${sliderMeta[key].suffix}`;
@@ -48,6 +63,8 @@ export function ControlsPanel({
   onReset,
   onSettingChange,
   onEnvironmentModeChange,
+  displayMode,
+  onDisplayModeChange,
   experimentEvents,
   isMutationStormActive,
   environmentState,
@@ -86,6 +103,29 @@ export function ControlsPanel({
             />
           </label>
         ))}
+      </div>
+
+      <div className="display-mode-section">
+        <div className="section-heading">
+          <h3>画布显示</h3>
+        </div>
+
+        <div className="display-mode-grid">
+          {displayModeOptions.map((mode) => (
+            <button
+              type="button"
+              className={
+                displayMode === mode.id
+                  ? 'display-mode-option active'
+                  : 'display-mode-option'
+              }
+              key={mode.id}
+              onClick={() => onDisplayModeChange(mode.id)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="environment-section">

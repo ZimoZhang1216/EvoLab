@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, TRAIT_LIMITS } from '../simulation/constants.js';
 import {
   applyEnvironmentalShock,
   calculateGeneStats,
+  calculateLineageStats,
   calculateStats,
   createWorld,
   dropFoodBatch,
@@ -35,6 +36,7 @@ export function useEvolutionSimulation() {
   const canvasRef = useRef(null);
   const settingsRef = useRef(DEFAULT_SETTINGS);
   const worldRef = useRef(createWorld(DEFAULT_SETTINGS));
+  const displayModeRef = useRef('normal');
   const mutationStormActiveRef = useRef(false);
   const mutationStormTimeoutRef = useRef(null);
   const geneSampleIndexRef = useRef(0);
@@ -42,6 +44,9 @@ export function useEvolutionSimulation() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [stats, setStats] = useState(calculateStats(worldRef.current));
   const [geneStats, setGeneStats] = useState(calculateGeneStats(worldRef.current));
+  const [lineageStats, setLineageStats] = useState(
+    calculateLineageStats(worldRef.current),
+  );
   const [geneHistory, setGeneHistory] = useState([]);
   const [steadyHistory, setSteadyHistory] = useState([]);
   const [environmentState, setEnvironmentState] = useState(
@@ -49,6 +54,7 @@ export function useEvolutionSimulation() {
   );
   const [isRunning, setIsRunning] = useState(false);
   const [isMutationStormActive, setIsMutationStormActive] = useState(false);
+  const [displayMode, setDisplayMode] = useState('normal');
 
   useEffect(() => {
     settingsRef.current = settings;
@@ -59,6 +65,7 @@ export function useEvolutionSimulation() {
     const nextGeneStats = calculateGeneStats(worldRef.current);
     setStats(nextStats);
     setGeneStats(nextGeneStats);
+    setLineageStats(calculateLineageStats(worldRef.current));
     setEnvironmentState(
       getEnvironmentState(
         settingsRef.current.environmentMode,
@@ -136,11 +143,13 @@ export function useEvolutionSimulation() {
             settingsRef.current.environmentMode,
             worldRef.current.elapsedTime,
           ),
+          displayModeRef.current,
         );
       }
 
       if (time - previousStatsTime > 180) {
         setStats(calculateStats(worldRef.current));
+        setLineageStats(calculateLineageStats(worldRef.current));
         setEnvironmentState(
           getEnvironmentState(
             settingsRef.current.environmentMode,
@@ -177,6 +186,7 @@ export function useEvolutionSimulation() {
     const world = worldRef.current;
     setStats(calculateStats(world));
     setGeneStats(calculateGeneStats(world));
+    setLineageStats(calculateLineageStats(world));
     setEnvironmentState(
       getEnvironmentState(settingsRef.current.environmentMode, world.elapsedTime),
     );
@@ -186,6 +196,7 @@ export function useEvolutionSimulation() {
         canvasRef.current,
         world,
         getEnvironmentState(settingsRef.current.environmentMode, world.elapsedTime),
+        displayModeRef.current,
       );
     }
   }, []);
@@ -216,6 +227,7 @@ export function useEvolutionSimulation() {
     steadySampleIndexRef.current = 0;
     setStats(calculateStats(nextWorld));
     setGeneStats(calculateGeneStats(nextWorld));
+    setLineageStats(calculateLineageStats(nextWorld));
     setGeneHistory([]);
     setSteadyHistory([]);
     setEnvironmentState(
@@ -231,6 +243,7 @@ export function useEvolutionSimulation() {
           settingsRef.current.environmentMode,
           nextWorld.elapsedTime,
         ),
+        displayModeRef.current,
       );
     }
   }, [stopMutationStorm]);
@@ -263,6 +276,12 @@ export function useEvolutionSimulation() {
       return next;
     });
   }, []);
+
+  const updateDisplayMode = useCallback((mode) => {
+    displayModeRef.current = mode;
+    setDisplayMode(mode);
+    refreshWorld();
+  }, [refreshWorld]);
 
   const dropFood = useCallback(() => {
     dropFoodBatch(worldRef.current);
@@ -303,9 +322,11 @@ export function useEvolutionSimulation() {
     settings,
     stats,
     geneStats,
+    lineageStats,
     geneHistory,
     steadyHistory,
     environmentState,
+    displayMode,
     experimentEvents: {
       dropFood,
       triggerFamine,
@@ -317,5 +338,6 @@ export function useEvolutionSimulation() {
     reset,
     updateSetting,
     updateEnvironmentMode,
+    updateDisplayMode,
   };
 }

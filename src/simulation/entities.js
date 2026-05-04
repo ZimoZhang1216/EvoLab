@@ -21,13 +21,17 @@ export function createCreature(id, settings, overrides = {}) {
     x: randomRange(40, WORLD_WIDTH - 40),
     y: randomRange(40, WORLD_HEIGHT - 40),
     heading: randomHeading(),
+    generation: 0,
+    lineageId: id,
+    parentId: null,
+    birthTick: 0,
     ...DEFAULT_TRAITS,
     mutationRate: settings.mutationRate,
     ...overrides,
   };
 }
 
-export function reproduceCreature(parent, id, settings) {
+export function reproduceCreature(parent, id, settings, birthTick = 0) {
   const mutationRate = settings.mutationRate;
   const offset = randomRange(CREATURE_RADIUS * 3, CREATURE_RADIUS * 8);
   const heading = randomHeading();
@@ -45,6 +49,10 @@ export function reproduceCreature(parent, id, settings) {
     ),
     heading,
     energy: parent.energy * 0.45,
+    generation: (parent.generation ?? 0) + 1,
+    lineageId: parent.lineageId ?? parent.id,
+    parentId: parent.id,
+    birthTick,
     speed: mutateTrait(parent.speed, mutationRate, TRAIT_LIMITS.speed),
     vision: mutateTrait(parent.vision, mutationRate, TRAIT_LIMITS.vision),
     reproductionThreshold: mutateTrait(

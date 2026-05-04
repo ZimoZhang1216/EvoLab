@@ -30,6 +30,9 @@ export const GENE_KEYS = [
   'mutationRate',
 ];
 
+const MAX_LIFECYCLE_HISTORY_POINTS = 300;
+const LINEAGE_RECENT_WINDOW = 120;
+
 export function createWorld(settings) {
   const world = {
     tick: 0,
@@ -37,12 +40,20 @@ export function createWorld(settings) {
     foodSpawnAccumulator: 0,
     nextCreatureId: 1,
     nextFoodId: 1,
+    lifecycleHistory: [],
     creatures: [],
     foods: [],
   };
 
   for (let index = 0; index < INITIAL_CREATURE_COUNT; index += 1) {
-    world.creatures.push(createCreature(world.nextCreatureId, settings));
+    world.creatures.push(
+      createCreature(world.nextCreatureId, settings, {
+        generation: 0,
+        lineageId: world.nextCreatureId,
+        parentId: null,
+        birthTick: world.tick,
+      }),
+    );
     world.nextCreatureId += 1;
   }
 
@@ -60,11 +71,13 @@ export function stepWorld(world, settings, deltaSeconds) {
 
   const survivors = [];
   const births = [];
+  let deaths = 0;
 
   for (const creature of world.creatures) {
     updateCreature(creature, world, deltaSeconds);
 
     if (creature.energy <= 0 || creature.age > creature.lifespan) {
+      deaths += 1;
       continue;
     }
 
@@ -72,7 +85,12 @@ export function stepWorld(world, settings, deltaSeconds) {
       creature.energy > creature.reproductionThreshold &&
       survivors.length + births.length < MAX_CREATURE_COUNT
     ) {
-      const child = reproduceCreature(creature, world.nextCreatureId, settings);
+      const child = reproduceCreature(
+        creature,
+        world.nextCreatureId,
+        settings,
+        world.tick,
+      );
       world.nextCreatureId += 1;
       creature.energy *= 0.55;
       births.push(child);
@@ -82,6 +100,7 @@ export function stepWorld(world, settings, deltaSeconds) {
   }
 
   world.creatures = survivors.concat(births);
+  recordLifecycle(world, births.length, deaths);
 }
 
 export function calculateStats(world) {
@@ -160,6 +179,85 @@ export function calculateGeneStats(world) {
   };
 }
 
+export function calculateLineageStats(world) {
+  const population = world.creatures.length;
+
+  if (population === 0) {
+    return {
+      population,
+      highestGeneration: 0,
+      averageGeneration: 0,
+      dominantGeneration: 0,
+      recentBirths: 0,
+      recentDeaths: 0,
+      liveLineageCount: 0,
+      topLineages: [],
+      generationDistribution: [],
+      lineageDistribution: [],
+    };
+  }
+
+  const generationCounts = new Map();
+  const lineageCounts = new Map();
+  let highestGeneration = 0;
+  let generationTotal = 0;
+
+  for (const creature of world.creatures) {
+    const generation = creature.generation ?? 0;
+    const lineageId = creature.lineageId ?? creature.id;
+
+    highestGeneration = Math.max(highestGeneration, generation);
+    generationTotal += generation;
+    generationCounts.set(generation, (generationCounts.get(generation) ?? 0) + 1);
+    lineageCounts.set(lineageId, (lineageCounts.get(lineageId) ?? 0) + 1);
+  }
+
+  const dominantGeneration = [...generationCounts.entries()].sort(
+    ([leftGeneration, leftCount], [rightGeneration, rightCount]) =>
+      rightCount - leftCount || leftGeneration - rightGeneration,
+  )[0][0];
+  const topLineages = [...lineageCounts.entries()]
+    .sort(([leftId, leftCount], [rightId, rightCount]) =>
+      rightCount - leftCount || leftId - rightId,
+    )
+    .slice(0, 5)
+    .map(([id, count]) => ({
+      id,
+      count,
+      percent: count / population,
+    }));
+  const recentEvents = world.lifecycleHistory.slice(-LINEAGE_RECENT_WINDOW);
+  const recentBirths = recentEvents.reduce((sum, event) => sum + event.births, 0);
+  const recentDeaths = recentEvents.reduce((sum, event) => sum + event.deaths, 0);
+
+  return {
+    population,
+    highestGeneration,
+    averageGeneration: generationTotal / population,
+    dominantGeneration,
+    recentBirths,
+    recentDeaths,
+    liveLineageCount: lineageCounts.size,
+    topLineages,
+    generationDistribution: [...generationCounts.entries()]
+      .sort(([leftGeneration], [rightGeneration]) => leftGeneration - rightGeneration)
+      .map(([generation, count]) => ({
+        generation,
+        count,
+        percent: count / population,
+      })),
+    lineageDistribution: [...lineageCounts.entries()]
+      .sort(([leftId, leftCount], [rightId, rightCount]) =>
+        rightCount - leftCount || leftId - rightId,
+      )
+      .map(([id, count]) => ({
+        id,
+        count,
+        percent: count / population,
+      })),
+  };
+}
+
 export function dropFoodBatch(world, amount = 55) {
   let added = 0;
 
@@ -190,7 +288,26 @@ export function applyEnvironmentalShock(world, deathRate = 0.3) {
     world.creatures.splice(creatureIndex, 1);
   }
 
+  if (removeCount > 0) {
+    recordLifecycle(world, 0, removeCount);
+  }
+
   return removeCount;
+}
+
+function recordLifecycle(world, births, deaths) {
+  world.lifecycleHistory.push({
+    tick: world.tick,
+    births,
+    deaths,
+  });
+
+  if (world.lifecycleHistory.length > MAX_LIFECYCLE_HISTORY_POINTS) {
+    world.lifecycleHistory.splice(
+      0,
+      world.lifecycleHistory.length - MAX_LIFECYCLE_HISTORY_POINTS,
+    );
+  }
 }
 
 function updateCreature(creature, world, deltaSeconds) {
