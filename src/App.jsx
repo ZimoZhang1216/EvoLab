@@ -30,7 +30,10 @@ export default function App() {
       <header className="app-header">
         <div className="header-copy">
           <p className="eyebrow">Evolution Lab</p>
-          <h1>EvoLab：进化模拟器</h1>
+          <div className="title-row">
+            <h1>EvoLab：进化模拟器</h1>
+            <span className="version-badge">V-2.2</span>
+          </div>
           <p className="intro">
             观察生物在食物、能量、繁殖和突变压力下的群体演化。
           </p>

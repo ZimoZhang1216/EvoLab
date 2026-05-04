@@ -41,7 +41,9 @@ const ABUNDANT_SEASON_SECONDS = 18;
 const SEASONAL_ABUNDANT_MULTIPLIER = 1.85;
 const SEASONAL_FAMINE_MULTIPLIER = 0.3;
 
-const FOOD_PATCHES = [
+export const FOOD_PATCH_RADIUS = 120;
+
+export const FOOD_PATCHES = [
   { x: WORLD_WIDTH * 0.24, y: WORLD_HEIGHT * 0.28 },
   { x: WORLD_WIDTH * 0.68, y: WORLD_HEIGHT * 0.26 },
   { x: WORLD_WIDTH * 0.52, y: WORLD_HEIGHT * 0.72 },
@@ -78,7 +80,7 @@ export function createFoodPosition(environmentState) {
   if (environmentState.id === 'patchy' && Math.random() < 0.88) {
     const patch = FOOD_PATCHES[Math.floor(Math.random() * FOOD_PATCHES.length)];
     const angle = randomRange(0, Math.PI * 2);
-    const distance = Math.sqrt(Math.random()) * randomRange(20, 120);
+    const distance = Math.sqrt(Math.random()) * randomRange(20, FOOD_PATCH_RADIUS);
 
     return {
       x: clamp(patch.x + Math.cos(angle) * distance, 12, WORLD_WIDTH - 12),

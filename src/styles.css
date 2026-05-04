@@ -136,6 +136,25 @@ h1 {
   line-height: 1.05;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.version-badge {
+  border: 1px solid rgba(105, 215, 255, 0.32);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #77e6ff;
+  background: rgba(105, 215, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .intro {
   max-width: 680px;
   margin: 12px 0 0;

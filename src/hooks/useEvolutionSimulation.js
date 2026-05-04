@@ -129,7 +129,14 @@ export function useEvolutionSimulation() {
       }
 
       if (canvasRef.current) {
-        drawWorld(canvasRef.current, worldRef.current);
+        drawWorld(
+          canvasRef.current,
+          worldRef.current,
+          getEnvironmentState(
+            settingsRef.current.environmentMode,
+            worldRef.current.elapsedTime,
+          ),
+        );
       }
 
       if (time - previousStatsTime > 180) {
@@ -175,7 +182,11 @@ export function useEvolutionSimulation() {
     );
 
     if (canvasRef.current) {
-      drawWorld(canvasRef.current, world);
+      drawWorld(
+        canvasRef.current,
+        world,
+        getEnvironmentState(settingsRef.current.environmentMode, world.elapsedTime),
+      );
     }
   }, []);
 
@@ -213,7 +224,14 @@ export function useEvolutionSimulation() {
     setIsRunning(false);
 
     if (canvasRef.current) {
-      drawWorld(canvasRef.current, nextWorld);
+      drawWorld(
+        canvasRef.current,
+        nextWorld,
+        getEnvironmentState(
+          settingsRef.current.environmentMode,
+          nextWorld.elapsedTime,
+        ),
+      );
     }
   }, [stopMutationStorm]);
 

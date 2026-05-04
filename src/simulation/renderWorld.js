@@ -4,8 +4,9 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from './constants.js';
+import { FOOD_PATCHES, FOOD_PATCH_RADIUS } from './environmentModes.js';
 
-export function drawWorld(canvas, world) {
+export function drawWorld(canvas, world, environmentState) {
   const context = canvas.getContext('2d');
 
   if (!context) {
@@ -39,11 +40,38 @@ export function drawWorld(canvas, world) {
   context.scale(scale, scale);
 
   drawGrid(context);
+  drawPatchBoundaries(context, environmentState);
   drawFoods(context, world.foods);
   drawCreatures(context, world.creatures);
   drawWorldBorder(context);
 
   context.restore();
+}
+
+function drawPatchBoundaries(context, environmentState) {
+  if (environmentState?.id !== 'patchy') {
+    return;
+  }
+
+  for (const patch of FOOD_PATCHES) {
+    context.beginPath();
+    context.fillStyle = 'rgba(69, 214, 93, 0.055)';
+    context.arc(patch.x, patch.y, FOOD_PATCH_RADIUS, 0, Math.PI * 2);
+    context.fill();
+
+    context.beginPath();
+    context.strokeStyle = 'rgba(93, 255, 134, 0.45)';
+    context.lineWidth = 2;
+    context.setLineDash([10, 8]);
+    context.arc(patch.x, patch.y, FOOD_PATCH_RADIUS, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+
+    context.beginPath();
+    context.fillStyle = 'rgba(183, 255, 211, 0.78)';
+    context.arc(patch.x, patch.y, 4, 0, Math.PI * 2);
+    context.fill();
+  }
 }
 
 function drawGrid(context) {
