@@ -42,9 +42,8 @@ export default function App() {
           <SimulationCanvas canvasRef={canvasRef} />
         </section>
 
-        <aside className="side-panel">
+        <section className="operation-panel" aria-label="状态与控制">
           <StatsPanel stats={stats} />
-          <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
           <ControlsPanel
             isRunning={isRunning}
             settings={settings}
@@ -55,8 +54,10 @@ export default function App() {
             experimentEvents={experimentEvents}
             isMutationStormActive={isMutationStormActive}
           />
-          <MechanismPanel />
-        </aside>
+        </section>
+
+        <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
+        <MechanismPanel />
       </main>
     </div>
   );

@@ -186,9 +186,12 @@ h3 {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-areas:
+    "simulation operations"
+    "genes mechanism";
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .simulation-panel,
@@ -200,6 +203,7 @@ h3 {
 }
 
 .simulation-panel {
+  grid-area: simulation;
   overflow: hidden;
   padding: 12px;
 }
@@ -207,14 +211,15 @@ h3 {
 .simulation-canvas {
   display: block;
   width: 100%;
-  aspect-ratio: 1000 / 650;
-  min-height: 390px;
+  height: clamp(380px, 52vh, 560px);
+  min-height: 0;
   border: 1px solid rgba(105, 215, 255, 0.18);
   border-radius: 6px;
   background: #14171a;
 }
 
-.side-panel {
+.operation-panel {
+  grid-area: operations;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -390,15 +395,21 @@ input[type='range']::-moz-range-thumb {
   white-space: nowrap;
 }
 
+.gene-panel {
+  grid-area: genes;
+  min-width: 0;
+}
+
 .gene-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .gene-card {
   border: 1px solid rgba(86, 132, 166, 0.34);
   border-radius: 7px;
-  padding: 12px;
+  padding: 10px;
   background: #0d1721;
 }
 
@@ -448,7 +459,7 @@ input[type='range']::-moz-range-thumb {
 .gene-chart {
   display: block;
   width: 100%;
-  height: 58px;
+  height: 52px;
   margin-top: 10px;
   overflow: visible;
 }
@@ -474,7 +485,10 @@ input[type='range']::-moz-range-thumb {
 }
 
 .mechanism-panel {
+  grid-area: mechanism;
   color: #bfd5e4;
+  max-height: 280px;
+  overflow: auto;
 }
 
 .mechanism-section + .mechanism-section {
@@ -532,9 +546,14 @@ input[type='range']::-moz-range-thumb {
 
   .workspace {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "simulation"
+      "operations"
+      "genes"
+      "mechanism";
   }
 
-  .side-panel {
+  .operation-panel {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -545,7 +564,11 @@ input[type='range']::-moz-range-thumb {
   }
 
   .gene-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mechanism-panel {
+    max-height: none;
   }
 }
 
@@ -565,10 +588,10 @@ input[type='range']::-moz-range-thumb {
   }
 
   .simulation-canvas {
-    min-height: 260px;
+    height: clamp(260px, 46vh, 420px);
   }
 
-  .side-panel {
+  .operation-panel {
     display: flex;
   }
 
