@@ -110,6 +110,7 @@ export function calculateStats(world) {
     return {
       population,
       foodCount: world.foods.length,
+      elapsedTime: world.elapsedTime,
       averageSpeed: 0,
       averageVision: 0,
       averageEnergy: 0,
@@ -128,6 +129,7 @@ export function calculateStats(world) {
   return {
     population,
     foodCount: world.foods.length,
+    elapsedTime: world.elapsedTime,
     averageSpeed: totals.speed / population,
     averageVision: totals.vision / population,
     averageEnergy: totals.energy / population,
