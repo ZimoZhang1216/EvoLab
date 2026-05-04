@@ -735,18 +735,49 @@ input[type='range']::-moz-range-thumb {
 
 .lineage-row {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
   gap: 7px;
   align-items: center;
   color: #bfd5e4;
   font-size: 0.72rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 4px;
 }
 
 .lineage-swatch {
+  display: block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.58);
   box-shadow: 0 0 10px currentColor;
+}
+
+.lineage-row em {
+  border: 1px solid rgba(255, 216, 118, 0.48);
+  border-radius: 999px;
+  padding: 1px 5px;
+  color: #ffe59b;
+  background: rgba(141, 100, 20, 0.2);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.lineage-row.dominant {
+  border-color: rgba(255, 216, 118, 0.38);
+  background: rgba(255, 216, 118, 0.08);
+}
+
+.lineage-row.dominant .lineage-swatch {
+  width: 10px;
+  height: 10px;
+  border-color: #fff6d0;
+  box-shadow:
+    0 0 0 2px rgba(255, 216, 118, 0.24),
+    0 0 14px currentColor;
 }
 
 .lineage-row strong {

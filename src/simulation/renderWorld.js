@@ -5,19 +5,7 @@ import {
   WORLD_WIDTH,
 } from './constants.js';
 import { FOOD_PATCHES, FOOD_PATCH_RADIUS } from './environmentModes.js';
-
-const LINEAGE_COLORS = [
-  '#4aa8ff',
-  '#7cffb2',
-  '#ffd876',
-  '#b68cff',
-  '#ff8fb1',
-  '#5eead4',
-  '#f97316',
-  '#a3e635',
-  '#38bdf8',
-  '#f472b6',
-];
+import { getLineageColor } from './lineageColors.js';
 
 export function drawWorld(canvas, world, environmentState, displayMode = 'normal') {
   const context = canvas.getContext('2d');
@@ -121,12 +109,33 @@ function drawCreatures(context, creatures, displayMode) {
     (max, creature) => Math.max(max, creature.generation ?? 0),
     0,
   );
+  const dominantLineageId =
+    displayMode === 'lineage' ? getDominantLineageId(creatures) : null;
 
   for (const creature of creatures) {
+    const creatureColor = getCreatureColor(creature, displayMode, maxGeneration);
+    const isDominantLineage =
+      displayMode === 'lineage' &&
+      (creature.lineageId ?? creature.id) === dominantLineageId;
+
     context.beginPath();
-    context.fillStyle = getCreatureColor(creature, displayMode, maxGeneration);
+    context.fillStyle = creatureColor;
     context.arc(creature.x, creature.y, CREATURE_RADIUS, 0, Math.PI * 2);
     context.fill();
+
+    if (isDominantLineage) {
+      context.beginPath();
+      context.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+      context.lineWidth = 1.4;
+      context.arc(creature.x, creature.y, CREATURE_RADIUS + 2.2, 0, Math.PI * 2);
+      context.stroke();
+
+      context.beginPath();
+      context.strokeStyle = creatureColor;
+      context.lineWidth = 0.9;
+      context.arc(creature.x, creature.y, CREATURE_RADIUS + 3.8, 0, Math.PI * 2);
+      context.stroke();
+    }
 
     context.beginPath();
     context.fillStyle = 'rgba(255, 255, 255, 0.64)';
@@ -152,12 +161,34 @@ function getCreatureColor(creature, displayMode, maxGeneration) {
 
   if (displayMode === 'lineage') {
     const lineageId = creature.lineageId ?? creature.id;
-    const colorIndex = Math.abs(lineageId) % LINEAGE_COLORS.length;
-
-    return LINEAGE_COLORS[colorIndex];
+    return getLineageColor(lineageId);
   }
 
   return '#4aa8ff';
+}
+
+function getDominantLineageId(creatures) {
+  const lineageCounts = new Map();
+
+  for (const creature of creatures) {
+    const lineageId = creature.lineageId ?? creature.id;
+    lineageCounts.set(lineageId, (lineageCounts.get(lineageId) ?? 0) + 1);
+  }
+
+  let dominantId = null;
+  let dominantCount = 0;
+
+  for (const [lineageId, count] of lineageCounts) {
+    if (
+      count > dominantCount ||
+      (count === dominantCount && (dominantId === null || lineageId < dominantId))
+    ) {
+      dominantId = lineageId;
+      dominantCount = count;
+    }
+  }
+
+  return dominantId;
 }
 
 function drawWorldBorder(context) {

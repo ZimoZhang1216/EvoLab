@@ -1,15 +1,4 @@
-const LINEAGE_COLORS = [
-  '#4aa8ff',
-  '#7cffb2',
-  '#ffd876',
-  '#b68cff',
-  '#ff8fb1',
-  '#5eead4',
-  '#f97316',
-  '#a3e635',
-  '#38bdf8',
-  '#f472b6',
-];
+import { getLineageColor } from '../simulation/lineageColors.js';
 
 function formatNumber(value, digits = 1) {
   return Number.isFinite(value) ? value.toFixed(digits) : '0.0';
@@ -17,10 +6,6 @@ function formatNumber(value, digits = 1) {
 
 function formatPercent(value) {
   return `${(value * 100).toFixed(0)}%`;
-}
-
-function getLineageColor(lineageId) {
-  return LINEAGE_COLORS[Math.abs(lineageId) % LINEAGE_COLORS.length];
 }
 
 function compactGenerations(distribution, maxBars = 8) {
@@ -89,6 +74,7 @@ export function GenerationPanel({ lineageStats }) {
     1,
   );
   const lineageSegments = buildLineageSegments(lineageStats.lineageDistribution);
+  const dominantLineageId = lineageStats.topLineages[0]?.id;
 
   return (
     <section className="panel-block generation-panel" aria-label="世代更迭">
@@ -156,18 +142,27 @@ export function GenerationPanel({ lineageStats }) {
         </div>
 
         <div className="lineage-list">
-          {lineageStats.topLineages.map((lineage) => (
-            <div className="lineage-row" key={lineage.id}>
-              <span
-                className="lineage-swatch"
-                style={{ backgroundColor: getLineageColor(lineage.id) }}
-              />
-              <span>L{lineage.id}</span>
-              <strong>
-                {lineage.count} · {formatPercent(lineage.percent)}
-              </strong>
-            </div>
-          ))}
+          {lineageStats.topLineages.map((lineage) => {
+            const color = getLineageColor(lineage.id);
+            const isDominant = lineage.id === dominantLineageId;
+
+            return (
+              <div
+                className={isDominant ? 'lineage-row dominant' : 'lineage-row'}
+                key={lineage.id}
+              >
+                <span
+                  className="lineage-swatch"
+                  style={{ backgroundColor: color, color }}
+                />
+                <span>L{lineage.id}</span>
+                {isDominant && <em>最优</em>}
+                <strong>
+                  {lineage.count} · {formatPercent(lineage.percent)}
+                </strong>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
