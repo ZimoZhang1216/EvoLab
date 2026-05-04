@@ -12,7 +12,7 @@ export function StatsPanel({ stats }) {
 
   return (
     <section className="panel-block" aria-label="模拟统计">
-      <h2>Stats</h2>
+      <h2>统计数据</h2>
       <div className="stats-grid">
         {items.map(([label, value]) => (
           <div className="stat-tile" key={label}>

@@ -40,7 +40,7 @@ export function ControlsPanel({
 }) {
   return (
     <section className="panel-block" aria-label="模拟控制">
-      <h2>Controls</h2>
+      <h2>控制面板</h2>
       <div className="button-row">
         <button type="button" onClick={onStart} disabled={isRunning}>
           开始

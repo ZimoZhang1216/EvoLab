@@ -18,11 +18,15 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">Browser Evolution Simulator</p>
-          <h1>EvoLab</h1>
+        <div className="header-copy">
+          <p className="eyebrow">Evolution Lab</p>
+          <h1>EvoLab：进化模拟器</h1>
+          <p className="intro">
+            观察生物在食物、能量、繁殖和突变压力下的群体演化。
+          </p>
         </div>
         <div className={isRunning ? 'run-state active' : 'run-state'}>
+          <span className="status-dot" />
           {isRunning ? '运行中' : '已暂停'}
         </div>
       </header>
