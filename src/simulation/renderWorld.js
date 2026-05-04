@@ -398,11 +398,13 @@ function drawLineageRow(context, lineage, population, x, y, options = {}) {
   const width = options.width ?? 160;
   const color = getLineageColor(lineage.id);
   const percent = population > 0 ? lineage.count / population : 0;
+  const rowHeight = options.dominant ? 32 : 22;
+  const centerY = y;
 
   context.save();
 
   if (options.dominant) {
-    roundedRect(context, x - 6, y - 12, width + 12, 30, 7);
+    roundedRect(context, x - 6, centerY - rowHeight / 2, width + 12, rowHeight, 7);
     context.fillStyle = 'rgba(255, 216, 118, 0.08)';
     context.fill();
     context.strokeStyle = 'rgba(255, 216, 118, 0.34)';
@@ -411,12 +413,13 @@ function drawLineageRow(context, lineage, population, x, y, options = {}) {
 
   context.beginPath();
   context.fillStyle = color;
-  context.arc(x, y, options.dominant ? 5 : 4, 0, Math.PI * 2);
+  context.arc(x, centerY, options.dominant ? 5 : 4, 0, Math.PI * 2);
   context.fill();
   context.strokeStyle = 'rgba(255, 255, 255, 0.7)';
   context.stroke();
 
-  drawText(context, `L${lineage.id}`, x + 12, y + 4, {
+  drawText(context, `L${lineage.id}`, x + 12, centerY, {
+    baseline: 'middle',
     color: '#d9f6ff',
     family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
     size: 12,
@@ -424,10 +427,11 @@ function drawLineageRow(context, lineage, population, x, y, options = {}) {
   });
 
   if (options.dominant) {
-    drawPill(context, '最优', x + 58, y - 10, 38, '#7b5b12');
+    drawPill(context, '最优', x + 58, centerY - 11, 38, '#7b5b12');
   }
 
-  drawText(context, `${lineage.count} / ${(percent * 100).toFixed(0)}%`, x + width - 62, y + 4, {
+  drawText(context, `${lineage.count} / ${(percent * 100).toFixed(0)}%`, x + width - 62, centerY, {
+    baseline: 'middle',
     color: '#77e6ff',
     family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
     size: 12,
@@ -465,8 +469,9 @@ function drawPill(context, label, x, y, width, color) {
   context.fill();
   context.strokeStyle = 'rgba(105, 215, 255, 0.32)';
   context.stroke();
-  drawText(context, label, x + width / 2, y + 15, {
+  drawText(context, label, x + width / 2, y + 11, {
     align: 'center',
+    baseline: 'middle',
     color: '#eaf8ff',
     size: 11,
     weight: 900,
@@ -479,7 +484,7 @@ function drawText(context, text, x, y, options = {}) {
   context.fillStyle = options.color ?? '#d9f6ff';
   context.font = `${options.weight ?? 700} ${options.size ?? 12}px ${options.family ?? 'Inter, system-ui, sans-serif'}`;
   context.textAlign = options.align ?? 'left';
-  context.textBaseline = 'alphabetic';
+  context.textBaseline = options.baseline ?? 'alphabetic';
   context.fillText(text, x, y);
   context.restore();
 }
