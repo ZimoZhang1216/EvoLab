@@ -849,6 +849,7 @@ input[type='range']::-moz-range-thumb {
   gap: 9px;
   align-items: center;
   min-width: 0;
+  overflow: hidden;
   border: 1px solid rgba(86, 132, 166, 0.34);
   border-radius: 7px;
   padding: 7px 8px;
@@ -920,14 +921,18 @@ input[type='range']::-moz-range-thumb {
 
 .gene-chart-frame {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   height: 42px;
   margin-top: 0;
   overflow: hidden;
+  padding-right: 8px;
 }
 
 .gene-chart {
   display: block;
+  min-width: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;

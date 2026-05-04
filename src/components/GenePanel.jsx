@@ -91,14 +91,15 @@ function buildTrendPoints(history, key, width, height, padding) {
 }
 
 function GeneTrendChart({ history, geneKey }) {
-  const width = 168;
-  const height = 54;
+  const width = 160;
+  const height = 48;
   const padding = {
-    top: 5,
-    right: 5,
-    bottom: 5,
-    left: 5,
+    top: 6,
+    right: 12,
+    bottom: 6,
+    left: 10,
   };
+  const clipId = `gene-chart-clip-${geneKey}`;
   const { values, points } = buildTrendPoints(
     history,
     geneKey,
@@ -119,6 +120,16 @@ function GeneTrendChart({ history, geneKey }) {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
+        <defs>
+          <clipPath id={clipId}>
+            <rect
+              x={padding.left}
+              y={padding.top}
+              width={width - padding.left - padding.right}
+              height={height - padding.top - padding.bottom}
+            />
+          </clipPath>
+        </defs>
         <line
           className="gene-chart-grid"
           x1={padding.left}
@@ -141,6 +152,8 @@ function GeneTrendChart({ history, geneKey }) {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2.2"
+          vectorEffect="non-scaling-stroke"
+          clipPath={`url(#${clipId})`}
         />
       </svg>
       {values.length === 0 && <span className="gene-chart-empty">等待采样</span>}
