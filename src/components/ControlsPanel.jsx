@@ -37,6 +37,8 @@ export function ControlsPanel({
   onPause,
   onReset,
   onSettingChange,
+  experimentEvents,
+  isMutationStormActive,
 }) {
   return (
     <section className="panel-block" aria-label="模拟控制">
@@ -70,6 +72,43 @@ export function ControlsPanel({
             />
           </label>
         ))}
+      </div>
+
+      <div className="event-section">
+        <div className="section-heading">
+          <h3>实验事件</h3>
+          {isMutationStormActive && (
+            <span className="event-badge">突变风暴中</span>
+          )}
+        </div>
+
+        <div className="event-grid">
+          <button type="button" onClick={experimentEvents.dropFood}>
+            投放食物
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={experimentEvents.triggerFamine}
+          >
+            饥荒
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={experimentEvents.triggerEnvironmentalShock}
+          >
+            环境冲击
+          </button>
+          <button
+            type="button"
+            className="storm-button"
+            onClick={experimentEvents.triggerMutationStorm}
+            disabled={isMutationStormActive}
+          >
+            突变风暴
+          </button>
+        </div>
       </div>
     </section>
   );

@@ -5,6 +5,7 @@ function formatNumber(value, digits = 1) {
 export function StatsPanel({ stats }) {
   const items = [
     ['population', stats.population.toString()],
+    ['food', stats.foodCount.toString()],
     ['average speed', formatNumber(stats.averageSpeed)],
     ['average vision', formatNumber(stats.averageVision)],
     ['average energy', formatNumber(stats.averageEnergy)],

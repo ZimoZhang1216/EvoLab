@@ -7,8 +7,10 @@ export default function App() {
   const {
     canvasRef,
     isRunning,
+    isMutationStormActive,
     settings,
     stats,
+    experimentEvents,
     start,
     pause,
     reset,
@@ -45,6 +47,8 @@ export default function App() {
             onPause={pause}
             onReset={reset}
             onSettingChange={updateSetting}
+            experimentEvents={experimentEvents}
+            isMutationStormActive={isMutationStormActive}
           />
         </aside>
       </main>

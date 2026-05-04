@@ -72,6 +72,7 @@ export function calculateStats(world) {
   if (population === 0) {
     return {
       population,
+      foodCount: world.foods.length,
       averageSpeed: 0,
       averageVision: 0,
       averageEnergy: 0,
@@ -89,10 +90,44 @@ export function calculateStats(world) {
 
   return {
     population,
+    foodCount: world.foods.length,
     averageSpeed: totals.speed / population,
     averageVision: totals.vision / population,
     averageEnergy: totals.energy / population,
   };
+}
+
+export function dropFoodBatch(world, amount = 55) {
+  let added = 0;
+
+  while (added < amount && world.foods.length < MAX_FOOD_COUNT) {
+    addFood(world);
+    added += 1;
+  }
+
+  return added;
+}
+
+export function removeHalfFood(world) {
+  const removeCount = Math.floor(world.foods.length / 2);
+
+  for (let index = 0; index < removeCount; index += 1) {
+    const foodIndex = Math.floor(Math.random() * world.foods.length);
+    world.foods.splice(foodIndex, 1);
+  }
+
+  return removeCount;
+}
+
+export function applyEnvironmentalShock(world, deathRate = 0.3) {
+  const removeCount = Math.round(world.creatures.length * deathRate);
+
+  for (let index = 0; index < removeCount; index += 1) {
+    const creatureIndex = Math.floor(Math.random() * world.creatures.length);
+    world.creatures.splice(creatureIndex, 1);
+  }
+
+  return removeCount;
 }
 
 function updateCreature(creature, world, deltaSeconds) {
