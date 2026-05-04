@@ -14,6 +14,14 @@ import {
 import { createCreature, createFood, reproduceCreature } from './entities.js';
 import { clamp, distanceSquared, randomRange } from './random.js';
 
+export const GENE_KEYS = [
+  'speed',
+  'vision',
+  'reproductionThreshold',
+  'lifespan',
+  'mutationRate',
+];
+
 export function createWorld(settings) {
   const world = {
     tick: 0,
@@ -94,6 +102,51 @@ export function calculateStats(world) {
     averageSpeed: totals.speed / population,
     averageVision: totals.vision / population,
     averageEnergy: totals.energy / population,
+  };
+}
+
+export function calculateGeneStats(world) {
+  const population = world.creatures.length;
+  const genes = Object.fromEntries(
+    GENE_KEYS.map((key) => [
+      key,
+      {
+        average: 0,
+        min: 0,
+        max: 0,
+      },
+    ]),
+  );
+
+  if (population === 0) {
+    return {
+      population,
+      genes,
+    };
+  }
+
+  for (const key of GENE_KEYS) {
+    let total = 0;
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
+
+    for (const creature of world.creatures) {
+      const value = creature[key];
+      total += value;
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+    }
+
+    genes[key] = {
+      average: total / population,
+      min,
+      max,
+    };
+  }
+
+  return {
+    population,
+    genes,
   };
 }
 

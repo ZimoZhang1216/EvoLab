@@ -1,4 +1,5 @@
 import { ControlsPanel } from './components/ControlsPanel.jsx';
+import { GenePanel } from './components/GenePanel.jsx';
 import { MechanismPanel } from './components/MechanismPanel.jsx';
 import { SimulationCanvas } from './components/SimulationCanvas.jsx';
 import { StatsPanel } from './components/StatsPanel.jsx';
@@ -11,6 +12,8 @@ export default function App() {
     isMutationStormActive,
     settings,
     stats,
+    geneStats,
+    geneHistory,
     experimentEvents,
     start,
     pause,
@@ -41,6 +44,7 @@ export default function App() {
 
         <aside className="side-panel">
           <StatsPanel stats={stats} />
+          <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
           <ControlsPanel
             isRunning={isRunning}
             settings={settings}

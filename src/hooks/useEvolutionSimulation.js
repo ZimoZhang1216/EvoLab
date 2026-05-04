@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_SETTINGS, TRAIT_LIMITS } from '../simulation/constants.js';
 import {
   applyEnvironmentalShock,
+  calculateGeneStats,
   calculateStats,
   createWorld,
   dropFoodBatch,
@@ -13,6 +14,8 @@ import { drawWorld } from '../simulation/renderWorld.js';
 const MUTATION_STORM_DURATION_MS = 12000;
 const MUTATION_STORM_MULTIPLIER = 3;
 const MUTATION_STORM_MIN_RATE = 0.18;
+const GENE_SAMPLE_INTERVAL_MS = 1000;
+const MAX_GENE_HISTORY_POINTS = 300;
 
 function createMutationStormSettings(settings) {
   const maxMutationRate = TRAIT_LIMITS.mutationRate[1];
@@ -32,8 +35,11 @@ export function useEvolutionSimulation() {
   const worldRef = useRef(createWorld(DEFAULT_SETTINGS));
   const mutationStormActiveRef = useRef(false);
   const mutationStormTimeoutRef = useRef(null);
+  const geneSampleIndexRef = useRef(0);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [stats, setStats] = useState(calculateStats(worldRef.current));
+  const [geneStats, setGeneStats] = useState(calculateGeneStats(worldRef.current));
+  const [geneHistory, setGeneHistory] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isMutationStormActive, setIsMutationStormActive] = useState(false);
 
@@ -41,10 +47,41 @@ export function useEvolutionSimulation() {
     settingsRef.current = settings;
   }, [settings]);
 
+  const sampleGenes = useCallback(() => {
+    const nextGeneStats = calculateGeneStats(worldRef.current);
+    setGeneStats(nextGeneStats);
+
+    if (nextGeneStats.population === 0) {
+      return;
+    }
+
+    const nextSample = {
+      id: geneSampleIndexRef.current,
+      values: Object.fromEntries(
+        Object.entries(nextGeneStats.genes).map(([key, gene]) => [
+          key,
+          gene.average,
+        ]),
+      ),
+    };
+    geneSampleIndexRef.current += 1;
+
+    setGeneHistory((current) => {
+      const next = current.concat(nextSample);
+
+      if (next.length > MAX_GENE_HISTORY_POINTS) {
+        return next.slice(next.length - MAX_GENE_HISTORY_POINTS);
+      }
+
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     let frameId = 0;
     let previousTime = performance.now();
     let previousStatsTime = 0;
+    let previousGeneSampleTime = performance.now();
 
     const frame = (time) => {
       const rawDelta = Math.min((time - previousTime) / 1000, 0.05);
@@ -67,6 +104,11 @@ export function useEvolutionSimulation() {
         previousStatsTime = time;
       }
 
+      if (isRunning && time - previousGeneSampleTime > GENE_SAMPLE_INTERVAL_MS) {
+        sampleGenes();
+        previousGeneSampleTime = time;
+      }
+
       frameId = requestAnimationFrame(frame);
     };
 
@@ -75,7 +117,7 @@ export function useEvolutionSimulation() {
     return () => {
       cancelAnimationFrame(frameId);
     };
-  }, [isRunning]);
+  }, [isRunning, sampleGenes]);
 
   useEffect(() => {
     return () => {
@@ -88,6 +130,7 @@ export function useEvolutionSimulation() {
   const refreshWorld = useCallback(() => {
     const world = worldRef.current;
     setStats(calculateStats(world));
+    setGeneStats(calculateGeneStats(world));
 
     if (canvasRef.current) {
       drawWorld(canvasRef.current, world);
@@ -116,7 +159,10 @@ export function useEvolutionSimulation() {
     stopMutationStorm();
     const nextWorld = createWorld(settingsRef.current);
     worldRef.current = nextWorld;
+    geneSampleIndexRef.current = 0;
     setStats(calculateStats(nextWorld));
+    setGeneStats(calculateGeneStats(nextWorld));
+    setGeneHistory([]);
     setIsRunning(false);
 
     if (canvasRef.current) {
@@ -176,6 +222,8 @@ export function useEvolutionSimulation() {
     isMutationStormActive,
     settings,
     stats,
+    geneStats,
+    geneHistory,
     experimentEvents: {
       dropFood,
       triggerFamine,

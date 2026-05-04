@@ -371,6 +371,108 @@ input[type='range']::-moz-range-thumb {
   gap: 8px;
 }
 
+.gene-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.gene-header h2 {
+  margin-bottom: 0;
+}
+
+.gene-header span {
+  color: #80a6be;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.gene-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.gene-card {
+  border: 1px solid rgba(86, 132, 166, 0.34);
+  border-radius: 7px;
+  padding: 12px;
+  background: #0d1721;
+}
+
+.gene-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.gene-card-header h3 {
+  line-height: 1.25;
+}
+
+.gene-card-header strong {
+  color: #77e6ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.gene-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.gene-values span {
+  min-width: 0;
+  border: 1px solid rgba(105, 215, 255, 0.12);
+  border-radius: 6px;
+  padding: 6px;
+  color: #80a6be;
+  background: #0a1119;
+  font-size: 0.72rem;
+}
+
+.gene-values strong {
+  display: block;
+  margin-top: 2px;
+  color: #d9f6ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.83rem;
+}
+
+.gene-chart {
+  display: block;
+  width: 100%;
+  height: 58px;
+  margin-top: 10px;
+  overflow: visible;
+}
+
+.gene-chart-grid {
+  stroke: rgba(105, 215, 255, 0.12);
+  stroke-width: 1;
+}
+
+.gene-chart-empty {
+  fill: #5f7b8f;
+  font-size: 10px;
+}
+
+.empty-state {
+  border: 1px solid rgba(255, 143, 177, 0.22);
+  border-radius: 7px;
+  padding: 14px;
+  color: #ffd3df;
+  background: rgba(255, 143, 177, 0.08);
+  font-weight: 800;
+  text-align: center;
+}
+
 .mechanism-panel {
   color: #bfd5e4;
 }
@@ -437,8 +539,13 @@ input[type='range']::-moz-range-thumb {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
+  .gene-panel,
   .mechanism-panel {
     grid-column: 1 / -1;
+  }
+
+  .gene-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -475,8 +582,14 @@ input[type='range']::-moz-range-thumb {
     grid-template-columns: minmax(0, 1fr) 68px;
   }
 
+  .gene-panel,
   .mechanism-panel {
     grid-column: auto;
+  }
+
+  .gene-grid,
+  .gene-values {
+    grid-template-columns: 1fr;
   }
 
   .parameter-row {
