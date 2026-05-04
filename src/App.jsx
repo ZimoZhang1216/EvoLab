@@ -1,4 +1,5 @@
 import { ControlsPanel } from './components/ControlsPanel.jsx';
+import { MechanismPanel } from './components/MechanismPanel.jsx';
 import { SimulationCanvas } from './components/SimulationCanvas.jsx';
 import { StatsPanel } from './components/StatsPanel.jsx';
 import { useEvolutionSimulation } from './hooks/useEvolutionSimulation.js';
@@ -50,6 +51,7 @@ export default function App() {
             experimentEvents={experimentEvents}
             isMutationStormActive={isMutationStormActive}
           />
+          <MechanismPanel />
         </aside>
       </main>
     </div>
