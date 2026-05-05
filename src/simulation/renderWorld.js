@@ -112,16 +112,17 @@ function drawCreatures(context, creatures, displayMode) {
     (max, creature) => Math.max(max, creature.generation ?? 0),
     0,
   );
-  const dominantLineageId =
-    displayMode === 'lineage' ? getDominantLineageId(creatures) : null;
+  const dominantGroupId = ['lineage', 'branch'].includes(displayMode)
+    ? getDominantGroupId(creatures, displayMode)
+    : null;
 
   for (const creature of creatures) {
     const creatureColor = getCreatureColor(creature, displayMode, maxGeneration);
-    const isDominantLineage =
-      displayMode === 'lineage' &&
-      (creature.lineageId ?? creature.id) === dominantLineageId;
+    const isDominantGroup =
+      ['lineage', 'branch'].includes(displayMode) &&
+      getCreatureGroupId(creature, displayMode) === dominantGroupId;
 
-    if (isDominantLineage) {
+    if (isDominantGroup) {
       drawDominantGlow(context, creature, creatureColor);
     }
 
@@ -177,31 +178,44 @@ function getCreatureColor(creature, displayMode, maxGeneration) {
     return getLineageColor(lineageId);
   }
 
+  if (displayMode === 'branch') {
+    const branchId = creature.branchId ?? creature.lineageId ?? creature.id;
+    return getLineageColor(branchId);
+  }
+
   return '#4aa8ff';
 }
 
-function getDominantLineageId(creatures) {
-  const lineageCounts = new Map();
+function getDominantGroupId(creatures, displayMode) {
+  const groupCounts = new Map();
 
   for (const creature of creatures) {
-    const lineageId = creature.lineageId ?? creature.id;
-    lineageCounts.set(lineageId, (lineageCounts.get(lineageId) ?? 0) + 1);
+    const groupId = getCreatureGroupId(creature, displayMode);
+    groupCounts.set(groupId, (groupCounts.get(groupId) ?? 0) + 1);
   }
 
   let dominantId = null;
   let dominantCount = 0;
 
-  for (const [lineageId, count] of lineageCounts) {
+  for (const [groupId, count] of groupCounts) {
     if (
       count > dominantCount ||
-      (count === dominantCount && (dominantId === null || lineageId < dominantId))
+      (count === dominantCount && (dominantId === null || groupId < dominantId))
     ) {
-      dominantId = lineageId;
+      dominantId = groupId;
       dominantCount = count;
     }
   }
 
   return dominantId;
+}
+
+function getCreatureGroupId(creature, displayMode) {
+  if (displayMode === 'branch') {
+    return creature.branchId ?? creature.lineageId ?? creature.id;
+  }
+
+  return creature.lineageId ?? creature.id;
 }
 
 function drawWorldBorder(context) {
@@ -272,13 +286,19 @@ function drawSideHud(context, world, environmentState, displayMode, panel) {
   );
 
   const lineageY = metricY + 138;
-  drawText(context, '最优谱系', panel.x + 16, lineageY, {
+  const isBranchMode = displayMode === 'branch';
+  const rankedGroups = isBranchMode ? stats.topBranches : stats.topLineages;
+  const dominantTitle = isBranchMode ? '优势分支' : '最优谱系';
+  const rankingTitle = isBranchMode ? '分支排行' : '谱系排行';
+  const rowPrefix = isBranchMode ? 'B' : 'L';
+
+  drawText(context, dominantTitle, panel.x + 16, lineageY, {
     color: '#eaf8ff',
     size: 13,
     weight: 800,
   });
 
-  if (stats.topLineages.length === 0) {
+  if (rankedGroups.length === 0) {
     drawText(context, '种群已灭绝', panel.x + 16, lineageY + 28, {
       color: '#ffd3df',
       size: 13,
@@ -287,13 +307,14 @@ function drawSideHud(context, world, environmentState, displayMode, panel) {
     return;
   }
 
-  const dominantLineage = stats.topLineages[0];
-  drawLineageRow(context, dominantLineage, stats.population, panel.x + 16, lineageY + 26, {
+  const dominantGroup = rankedGroups[0];
+  drawLineageRow(context, dominantGroup, stats.population, panel.x + 16, lineageY + 26, {
     dominant: true,
+    prefix: rowPrefix,
     width: panel.width - 32,
   });
 
-  drawText(context, '谱系排行', panel.x + 16, lineageY + 70, {
+  drawText(context, rankingTitle, panel.x + 16, lineageY + 70, {
     color: '#88aabd',
     size: 12,
     weight: 800,
@@ -304,7 +325,7 @@ function drawSideHud(context, world, environmentState, displayMode, panel) {
     Math.min(4, Math.floor((panel.y + panel.height - (lineageY + 94)) / 26)),
   );
 
-  stats.topLineages.slice(1, 1 + availableRows).forEach((lineage, index) => {
+  rankedGroups.slice(1, 1 + availableRows).forEach((lineage, index) => {
     drawLineageRow(
       context,
       lineage,
@@ -312,6 +333,7 @@ function drawSideHud(context, world, environmentState, displayMode, panel) {
       panel.x + 16,
       lineageY + 94 + index * 26,
       {
+        prefix: rowPrefix,
         width: panel.width - 32,
       },
     );
@@ -334,9 +356,16 @@ function drawBottomHud(context, world, displayMode, panel) {
     panel.x + 138,
     panel.y + 20,
   );
+  const groupText =
+    displayMode === 'branch'
+      ? `当前活跃分支 ${stats.branchCount}`
+      : `当前存活谱系 ${stats.lineageCount}`;
+  const highlightText =
+    displayMode === 'branch' ? '当前优势分支' : '当前最优谱系';
+
   drawText(
     context,
-    `出生个体会继承亲代谱系；高亮外圈代表当前最优谱系。当前存活谱系 ${stats.lineageCount}`,
+    `出生个体会继承亲代谱系；高亮外圈代表${highlightText}。${groupText}`,
     panel.x + 14,
     panel.y + 50,
     {
@@ -357,13 +386,25 @@ function calculateHudStats(world) {
     { speed: 0, vision: 0 },
   );
   const lineageCounts = new Map();
+  const branchCounts = new Map();
 
   for (const creature of world.creatures) {
     const lineageId = creature.lineageId ?? creature.id;
+    const branchId = creature.branchId ?? creature.lineageId ?? creature.id;
     lineageCounts.set(lineageId, (lineageCounts.get(lineageId) ?? 0) + 1);
+    branchCounts.set(branchId, (branchCounts.get(branchId) ?? 0) + 1);
   }
 
   const topLineages = [...lineageCounts.entries()]
+    .sort(([leftId, leftCount], [rightId, rightCount]) =>
+      rightCount - leftCount || leftId - rightId,
+    )
+    .slice(0, 5)
+    .map(([id, count]) => ({
+      id,
+      count,
+    }));
+  const topBranches = [...branchCounts.entries()]
     .sort(([leftId, leftCount], [rightId, rightCount]) =>
       rightCount - leftCount || leftId - rightId,
     )
@@ -379,7 +420,9 @@ function calculateHudStats(world) {
     averageSpeed: population > 0 ? totals.speed / population : 0,
     averageVision: population > 0 ? totals.vision / population : 0,
     lineageCount: lineageCounts.size,
+    branchCount: branchCounts.size,
     topLineages,
+    topBranches,
   };
 }
 
@@ -428,7 +471,7 @@ function drawLineageRow(context, lineage, population, x, y, options = {}) {
   context.strokeStyle = 'rgba(255, 255, 255, 0.7)';
   context.stroke();
 
-  drawText(context, `L${lineage.id}`, x + 12, centerY, {
+  drawText(context, `${options.prefix ?? 'L'}${lineage.id}`, x + 12, centerY, {
     baseline: 'middle',
     color: '#d9f6ff',
     family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
@@ -522,6 +565,10 @@ function getDisplayModeLabel(displayMode) {
 
   if (displayMode === 'lineage') {
     return '谱系';
+  }
+
+  if (displayMode === 'branch') {
+    return '突变分支';
   }
 
   return '普通';

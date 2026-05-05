@@ -33,6 +33,16 @@ export const GENE_KEYS = [
 const MAX_LIFECYCLE_HISTORY_POINTS = 300;
 const LINEAGE_RECENT_WINDOW = 120;
 const LINEAGE_ADVANTAGE_WINDOW = 300;
+const BRANCH_RECENT_WINDOW = 300;
+const MUTATION_STORM_BRANCH_THRESHOLD_MULTIPLIER = 0.6;
+const MUTATION_STORM_BRANCH_CHANCE = 0.35;
+const SIGNIFICANT_MUTATION_THRESHOLDS = {
+  speed: 4.6,
+  vision: 10,
+  reproductionThreshold: 7.5,
+  lifespan: 9,
+  mutationRate: 0.035,
+};
 
 export function createWorld(settings) {
   const world = {
@@ -41,21 +51,36 @@ export function createWorld(settings) {
     foodSpawnAccumulator: 0,
     nextCreatureId: 1,
     nextFoodId: 1,
+    nextBranchId: 1,
+    branchRegistry: {},
     lifecycleHistory: [],
     creatures: [],
     foods: [],
   };
 
   for (let index = 0; index < INITIAL_CREATURE_COUNT; index += 1) {
+    const creatureId = world.nextCreatureId;
+    const branchId = world.nextBranchId;
+
     world.creatures.push(
-      createCreature(world.nextCreatureId, settings, {
+      createCreature(creatureId, settings, {
         generation: 0,
-        lineageId: world.nextCreatureId,
+        lineageId: creatureId,
+        branchId,
+        parentBranchId: null,
+        branchBirthTick: world.tick,
         parentId: null,
         birthTick: world.tick,
       }),
     );
+    world.branchRegistry[branchId] = {
+      id: branchId,
+      lineageId: creatureId,
+      parentBranchId: null,
+      birthTick: world.tick,
+    };
     world.nextCreatureId += 1;
+    world.nextBranchId += 1;
   }
 
   for (let index = 0; index < INITIAL_FOOD_COUNT; index += 1) {
@@ -81,6 +106,7 @@ export function stepWorld(world, settings, deltaSeconds) {
     if (creature.energy <= 0 || creature.age > creature.lifespan) {
       deaths += 1;
       recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'deaths');
+      recordBranchEvent(lifecycleEvent, getCreatureBranchId(creature), 'deaths');
       continue;
     }
 
@@ -95,11 +121,18 @@ export function stepWorld(world, settings, deltaSeconds) {
         world.tick,
       );
       world.nextCreatureId += 1;
+      assignMutationBranchIfNeeded(world, creature, child, settings, lifecycleEvent);
       creature.energy *= 0.55;
-      recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'births');
+      recordLineageEvent(lifecycleEvent, getCreatureLineageId(child), 'births');
       recordLineageEvent(
         lifecycleEvent,
         getCreatureLineageId(creature),
+        'reproductions',
+      );
+      recordBranchEvent(lifecycleEvent, getCreatureBranchId(child), 'births');
+      recordBranchEvent(
+        lifecycleEvent,
+        getCreatureBranchId(creature),
         'reproductions',
       );
       births.push(child);
@@ -328,6 +361,95 @@ export function calculateLineageAdvantageStats(world) {
   };
 }
 
+export function calculateBranchStats(world) {
+  const population = world.creatures.length;
+  const recentEvents = world.lifecycleHistory.slice(-BRANCH_RECENT_WINDOW);
+  const recentNewBranches = recentEvents.reduce(
+    (sum, event) => sum + (event.newBranches ?? 0),
+    0,
+  );
+  const recentNetGrowth = recentEvents.reduce(
+    (sum, event) => sum + (event.births ?? 0) - (event.deaths ?? 0),
+    0,
+  );
+  const previousPopulation = Math.max(0, population - recentNetGrowth);
+
+  if (population === 0) {
+    return {
+      population,
+      windowSize: recentEvents.length,
+      activeBranchCount: 0,
+      historicalBranchCount: getHistoricalBranchCount(world),
+      recentNewBranches,
+      topBranches: [],
+    };
+  }
+
+  const branchBuckets = new Map();
+
+  for (const creature of world.creatures) {
+    const branchId = getCreatureBranchId(creature);
+    const bucket = getBranchBucket(branchBuckets, world, branchId, {
+      lineageId: getCreatureLineageId(creature),
+      parentBranchId: creature.parentBranchId ?? null,
+      birthTick: creature.branchBirthTick ?? 0,
+    });
+
+    addCreatureToLineageTotals(bucket.totals, creature);
+    bucket.count += 1;
+  }
+
+  for (const event of recentEvents) {
+    for (const [branchId, branchEvent] of Object.entries(event.branches ?? {})) {
+      const bucket = getBranchBucket(branchBuckets, world, Number(branchId));
+
+      bucket.recent.births += branchEvent.births ?? 0;
+      bucket.recent.deaths += branchEvent.deaths ?? 0;
+      bucket.recent.foodEaten += branchEvent.foodEaten ?? 0;
+      bucket.recent.reproductions += branchEvent.reproductions ?? 0;
+      bucket.recent.newBranches += branchEvent.newBranches ?? 0;
+    }
+  }
+
+  const activeBranches = [...branchBuckets.values()].filter(
+    (branch) => branch.count > 0,
+  );
+
+  return {
+    population,
+    windowSize: recentEvents.length,
+    activeBranchCount: activeBranches.length,
+    historicalBranchCount: getHistoricalBranchCount(world),
+    recentNewBranches,
+    topBranches: activeBranches
+      .sort((left, right) => right.count - left.count || left.id - right.id)
+      .slice(0, 5)
+      .map((branch) => {
+        const recent = {
+          ...branch.recent,
+          netGrowth: branch.recent.births - branch.recent.deaths,
+        };
+        const previousCount = Math.max(0, branch.count - recent.netGrowth);
+        const previousPercent =
+          previousPopulation > 0 ? previousCount / previousPopulation : 0;
+        const percent = branch.count / population;
+
+        return {
+          id: branch.id,
+          lineageId: branch.lineageId,
+          parentBranchId: branch.parentBranchId,
+          birthTick: branch.birthTick,
+          count: branch.count,
+          percent,
+          previousPercent,
+          isExpanding: recent.netGrowth > 0 && percent > previousPercent + 0.01,
+          averages: calculateLineageAverages(branch.totals, branch.count),
+          recent,
+        };
+      }),
+  };
+}
+
 export function dropFoodBatch(world, amount = 55) {
   let added = 0;
 
@@ -360,6 +482,7 @@ export function applyEnvironmentalShock(world, deathRate = 0.3) {
 
     if (creature) {
       recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'deaths');
+      recordBranchEvent(lifecycleEvent, getCreatureBranchId(creature), 'deaths');
     }
 
     world.creatures.splice(creatureIndex, 1);
@@ -379,7 +502,9 @@ function createLifecycleEvent(tick) {
     deaths: 0,
     foodEaten: 0,
     reproductions: 0,
+    newBranches: 0,
     lineages: {},
+    branches: {},
   };
 }
 
@@ -401,6 +526,30 @@ function recordLineageEvent(event, lineageId, type, amount = 1) {
 
   event[type] += amount;
   event.lineages[key][type] += amount;
+}
+
+function recordBranchEvent(event, branchId, type, amount = 1) {
+  if (!event || !Number.isFinite(Number(branchId))) {
+    return;
+  }
+
+  const key = String(branchId);
+
+  if (!event.branches[key]) {
+    event.branches[key] = {
+      births: 0,
+      deaths: 0,
+      foodEaten: 0,
+      reproductions: 0,
+      newBranches: 0,
+    };
+  }
+
+  if (type === 'newBranches') {
+    event.newBranches += amount;
+  }
+
+  event.branches[key][type] += amount;
 }
 
 function recordLifecycle(world, event) {
@@ -457,12 +606,122 @@ function updateCreature(creature, world, deltaSeconds, lifecycleEvent) {
         getCreatureLineageId(creature),
         'foodEaten',
       );
+      recordBranchEvent(lifecycleEvent, getCreatureBranchId(creature), 'foodEaten');
     }
   }
 }
 
 function getCreatureLineageId(creature) {
   return creature.lineageId ?? creature.id;
+}
+
+function getCreatureBranchId(creature) {
+  return creature.branchId ?? creature.lineageId ?? creature.id;
+}
+
+function assignMutationBranchIfNeeded(world, parent, child, settings, lifecycleEvent) {
+  if (!hasSignificantMutation(parent, child, settings)) {
+    return;
+  }
+
+  const branchId = consumeNextBranchId(world);
+  const parentBranchId = getCreatureBranchId(parent);
+
+  child.branchId = branchId;
+  child.parentBranchId = parentBranchId;
+  child.branchBirthTick = world.tick;
+
+  ensureBranchRegistry(world);
+  world.branchRegistry[branchId] = {
+    id: branchId,
+    lineageId: getCreatureLineageId(child),
+    parentBranchId,
+    birthTick: world.tick,
+  };
+
+  recordBranchEvent(lifecycleEvent, branchId, 'newBranches');
+}
+
+function hasSignificantMutation(parent, child, settings) {
+  const thresholdMultiplier = settings.isMutationStormActive
+    ? MUTATION_STORM_BRANCH_THRESHOLD_MULTIPLIER
+    : 1;
+  const hasMajorGeneChange = GENE_KEYS.some((key) => {
+    const threshold = SIGNIFICANT_MUTATION_THRESHOLDS[key] * thresholdMultiplier;
+
+    return Math.abs((child[key] ?? 0) - (parent[key] ?? 0)) >= threshold;
+  });
+
+  if (!hasMajorGeneChange) {
+    return false;
+  }
+
+  if (settings.isMutationStormActive) {
+    return Math.random() < MUTATION_STORM_BRANCH_CHANCE;
+  }
+
+  return true;
+}
+
+function consumeNextBranchId(world) {
+  ensureBranchRegistry(world);
+
+  if (!Number.isFinite(world.nextBranchId)) {
+    world.nextBranchId = getHistoricalBranchCount(world) + 1;
+  }
+
+  const branchId = world.nextBranchId;
+  world.nextBranchId += 1;
+
+  return branchId;
+}
+
+function ensureBranchRegistry(world) {
+  if (!world.branchRegistry) {
+    world.branchRegistry = {};
+  }
+}
+
+function getHistoricalBranchCount(world) {
+  const registryCount = Object.keys(world.branchRegistry ?? {}).length;
+
+  if (registryCount > 0) {
+    return registryCount;
+  }
+
+  const liveBranchIds = new Set(world.creatures.map((creature) => getCreatureBranchId(creature)));
+
+  return Math.max(liveBranchIds.size, (world.nextBranchId ?? 1) - 1);
+}
+
+function getBranchBucket(branchBuckets, world, branchId, fallback = {}) {
+  const normalizedBranchId = Number(branchId);
+  const metadata = world.branchRegistry?.[normalizedBranchId] ?? {};
+
+  if (!branchBuckets.has(normalizedBranchId)) {
+    branchBuckets.set(normalizedBranchId, {
+      id: normalizedBranchId,
+      lineageId: fallback.lineageId ?? metadata.lineageId ?? null,
+      parentBranchId: fallback.parentBranchId ?? metadata.parentBranchId ?? null,
+      birthTick: fallback.birthTick ?? metadata.birthTick ?? 0,
+      count: 0,
+      totals: createLineageTotals(),
+      recent: {
+        births: 0,
+        deaths: 0,
+        foodEaten: 0,
+        reproductions: 0,
+        newBranches: 0,
+      },
+    });
+  }
+
+  const bucket = branchBuckets.get(normalizedBranchId);
+  bucket.lineageId ??= fallback.lineageId ?? metadata.lineageId ?? null;
+  bucket.parentBranchId ??= fallback.parentBranchId ?? metadata.parentBranchId ?? null;
+  bucket.birthTick ??= fallback.birthTick ?? metadata.birthTick ?? 0;
+
+  return bucket;
 }
 
 function createLineageTotals() {

@@ -8,6 +8,10 @@ function formatPercent(value) {
   return `${(value * 100).toFixed(0)}%`;
 }
 
+function formatMutationRate(value) {
+  return Number.isFinite(value) ? value.toFixed(3) : '0.000';
+}
+
 function compactGenerations(distribution, maxBars = 8) {
   if (distribution.length <= maxBars) {
     return distribution.map((item) => ({
@@ -58,7 +62,7 @@ function buildLineageSegments(lineageDistribution) {
   });
 }
 
-export function GenerationPanel({ lineageStats }) {
+export function GenerationPanel({ lineageStats, branchStats }) {
   if (lineageStats.population === 0) {
     return (
       <section className="panel-block generation-panel" aria-label="世代更迭">
@@ -165,6 +169,81 @@ export function GenerationPanel({ lineageStats }) {
           })}
         </div>
       </div>
+
+      {branchStats && (
+        <div className="generation-section branch-section">
+          <h3>突变分支</h3>
+
+          <div className="branch-summary">
+            <span>
+              活跃分支 <strong>{branchStats.activeBranchCount}</strong>
+            </span>
+            <span>
+              历史总数 <strong>{branchStats.historicalBranchCount}</strong>
+            </span>
+            <span>
+              近期新增 <strong>{branchStats.recentNewBranches}</strong>
+            </span>
+          </div>
+
+          <div className="branch-list">
+            {branchStats.topBranches.map((branch, index) => {
+              const color = getLineageColor(branch.id);
+              const parentLabel =
+                branch.parentBranchId === null || branch.parentBranchId === undefined
+                  ? '初始分支'
+                  : `来自 B${branch.parentBranchId}`;
+
+              return (
+                <article
+                  className={index === 0 ? 'branch-card dominant' : 'branch-card'}
+                  key={branch.id}
+                >
+                  <div className="branch-title">
+                    <span
+                      className="lineage-swatch"
+                      style={{ backgroundColor: color, color }}
+                    />
+                    <strong>B{branch.id}</strong>
+                    <small>
+                      {parentLabel} · L{branch.lineageId ?? '-'}
+                    </small>
+                    <em>
+                      {branch.count} · {formatPercent(branch.percent)}
+                    </em>
+                  </div>
+
+                  <div className="branch-traits">
+                    <span>
+                      speed <strong>{formatNumber(branch.averages.speed)}</strong>
+                    </span>
+                    <span>
+                      vision <strong>{formatNumber(branch.averages.vision)}</strong>
+                    </span>
+                    <span>
+                      reproductionThreshold{' '}
+                      <strong>
+                        {formatNumber(branch.averages.reproductionThreshold)}
+                      </strong>
+                    </span>
+                    <span>
+                      lifespan <strong>{formatNumber(branch.averages.lifespan)}</strong>
+                    </span>
+                    <span>
+                      mutationRate{' '}
+                      <strong>{formatMutationRate(branch.averages.mutationRate)}</strong>
+                    </span>
+                  </div>
+
+                  {branch.isExpanding && (
+                    <p className="branch-expansion">该突变分支正在扩张</p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -37,6 +37,10 @@ const displayModeOptions = [
     id: 'lineage',
     label: '谱系',
   },
+  {
+    id: 'branch',
+    label: '突变分支',
+  },
 ];
 
 function formatControlValue(key, value) {

@@ -17,6 +17,7 @@ export default function App() {
     stats,
     geneStats,
     lineageStats,
+    branchStats,
     lineageAdvantageStats,
     geneHistory,
     steadyHistory,
@@ -38,7 +39,7 @@ export default function App() {
           <p className="eyebrow">Evolution Lab</p>
           <div className="title-row">
             <h1>EvoLab：进化模拟器</h1>
-            <span className="version-badge">V-4.0</span>
+            <span className="version-badge">V-4.1</span>
           </div>
           <p className="intro">
             观察生物在食物、能量、繁殖和突变压力下的群体演化。
@@ -58,7 +59,7 @@ export default function App() {
 
           <div className="monitor-row">
             <SteadyStatePanel stats={stats} history={steadyHistory} />
-            <GenerationPanel lineageStats={lineageStats} />
+            <GenerationPanel lineageStats={lineageStats} branchStats={branchStats} />
             <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
           </div>
 
