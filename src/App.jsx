@@ -1,6 +1,7 @@
 import { ControlsPanel } from './components/ControlsPanel.jsx';
 import { GenePanel } from './components/GenePanel.jsx';
 import { GenerationPanel } from './components/GenerationPanel.jsx';
+import { LineageAdvantagePanel } from './components/LineageAdvantagePanel.jsx';
 import { MechanismPanel } from './components/MechanismPanel.jsx';
 import { SimulationCanvas } from './components/SimulationCanvas.jsx';
 import { StatsPanel } from './components/StatsPanel.jsx';
@@ -16,6 +17,7 @@ export default function App() {
     stats,
     geneStats,
     lineageStats,
+    lineageAdvantageStats,
     geneHistory,
     steadyHistory,
     environmentState,
@@ -36,7 +38,7 @@ export default function App() {
           <p className="eyebrow">Evolution Lab</p>
           <div className="title-row">
             <h1>EvoLab：进化模拟器</h1>
-            <span className="version-badge">V-3.11</span>
+            <span className="version-badge">V-4.0</span>
           </div>
           <p className="intro">
             观察生物在食物、能量、繁殖和突变压力下的群体演化。
@@ -59,6 +61,8 @@ export default function App() {
             <GenerationPanel lineageStats={lineageStats} />
             <GenePanel geneStats={geneStats} geneHistory={geneHistory} />
           </div>
+
+          <LineageAdvantagePanel advantageStats={lineageAdvantageStats} />
         </section>
 
         <aside className="utility-column" aria-label="状态、控制与说明">

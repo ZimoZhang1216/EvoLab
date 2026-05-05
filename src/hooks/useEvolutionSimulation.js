@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, TRAIT_LIMITS } from '../simulation/constants.js';
 import {
   applyEnvironmentalShock,
   calculateGeneStats,
+  calculateLineageAdvantageStats,
   calculateLineageStats,
   calculateStats,
   createWorld,
@@ -48,6 +49,9 @@ export function useEvolutionSimulation() {
   const [lineageStats, setLineageStats] = useState(
     calculateLineageStats(worldRef.current),
   );
+  const [lineageAdvantageStats, setLineageAdvantageStats] = useState(
+    calculateLineageAdvantageStats(worldRef.current),
+  );
   const [geneHistory, setGeneHistory] = useState([]);
   const [steadyHistory, setSteadyHistory] = useState([]);
   const [environmentState, setEnvironmentState] = useState(
@@ -67,6 +71,7 @@ export function useEvolutionSimulation() {
     setStats(nextStats);
     setGeneStats(nextGeneStats);
     setLineageStats(calculateLineageStats(worldRef.current));
+    setLineageAdvantageStats(calculateLineageAdvantageStats(worldRef.current));
     setEnvironmentState(
       getEnvironmentState(
         settingsRef.current.environmentMode,
@@ -151,6 +156,7 @@ export function useEvolutionSimulation() {
       if (time - previousStatsTime > 180) {
         setStats(calculateStats(worldRef.current));
         setLineageStats(calculateLineageStats(worldRef.current));
+        setLineageAdvantageStats(calculateLineageAdvantageStats(worldRef.current));
         setEnvironmentState(
           getEnvironmentState(
             settingsRef.current.environmentMode,
@@ -188,6 +194,7 @@ export function useEvolutionSimulation() {
     setStats(calculateStats(world));
     setGeneStats(calculateGeneStats(world));
     setLineageStats(calculateLineageStats(world));
+    setLineageAdvantageStats(calculateLineageAdvantageStats(world));
     setEnvironmentState(
       getEnvironmentState(settingsRef.current.environmentMode, world.elapsedTime),
     );
@@ -229,6 +236,7 @@ export function useEvolutionSimulation() {
     setStats(calculateStats(nextWorld));
     setGeneStats(calculateGeneStats(nextWorld));
     setLineageStats(calculateLineageStats(nextWorld));
+    setLineageAdvantageStats(calculateLineageAdvantageStats(nextWorld));
     setGeneHistory([]);
     setSteadyHistory([]);
     setEnvironmentState(
@@ -324,6 +332,7 @@ export function useEvolutionSimulation() {
     stats,
     geneStats,
     lineageStats,
+    lineageAdvantageStats,
     geneHistory,
     steadyHistory,
     environmentState,

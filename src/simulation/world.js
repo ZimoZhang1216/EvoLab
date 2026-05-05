@@ -32,6 +32,7 @@ export const GENE_KEYS = [
 
 const MAX_LIFECYCLE_HISTORY_POINTS = 300;
 const LINEAGE_RECENT_WINDOW = 120;
+const LINEAGE_ADVANTAGE_WINDOW = 300;
 
 export function createWorld(settings) {
   const world = {
@@ -71,13 +72,15 @@ export function stepWorld(world, settings, deltaSeconds) {
 
   const survivors = [];
   const births = [];
+  const lifecycleEvent = createLifecycleEvent(world.tick);
   let deaths = 0;
 
   for (const creature of world.creatures) {
-    updateCreature(creature, world, deltaSeconds);
+    updateCreature(creature, world, deltaSeconds, lifecycleEvent);
 
     if (creature.energy <= 0 || creature.age > creature.lifespan) {
       deaths += 1;
+      recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'deaths');
       continue;
     }
 
@@ -93,6 +96,12 @@ export function stepWorld(world, settings, deltaSeconds) {
       );
       world.nextCreatureId += 1;
       creature.energy *= 0.55;
+      recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'births');
+      recordLineageEvent(
+        lifecycleEvent,
+        getCreatureLineageId(creature),
+        'reproductions',
+      );
       births.push(child);
     }
 
@@ -100,7 +109,7 @@ export function stepWorld(world, settings, deltaSeconds) {
   }
 
   world.creatures = survivors.concat(births);
-  recordLifecycle(world, births.length, deaths);
+  recordLifecycle(world, lifecycleEvent);
 }
 
 export function calculateStats(world) {
@@ -260,6 +269,65 @@ export function calculateLineageStats(world) {
   };
 }
 
+export function calculateLineageAdvantageStats(world) {
+  const population = world.creatures.length;
+
+  if (population === 0) {
+    return {
+      population,
+      windowSize: Math.min(world.lifecycleHistory.length, LINEAGE_ADVANTAGE_WINDOW),
+      overall: createEmptyLineageAverages(),
+      lineages: [],
+    };
+  }
+
+  const lineageBuckets = new Map();
+  const overallTotals = createLineageTotals();
+
+  for (const creature of world.creatures) {
+    const lineageId = getCreatureLineageId(creature);
+    const bucket = getLineageBucket(lineageBuckets, lineageId);
+
+    addCreatureToLineageTotals(bucket.totals, creature);
+    addCreatureToLineageTotals(overallTotals, creature);
+    bucket.count += 1;
+  }
+
+  const recentEvents = world.lifecycleHistory.slice(-LINEAGE_ADVANTAGE_WINDOW);
+
+  for (const event of recentEvents) {
+    for (const [lineageId, lineageEvent] of Object.entries(event.lineages ?? {})) {
+      const numericLineageId = Number(lineageId);
+      const bucket = getLineageBucket(lineageBuckets, numericLineageId);
+
+      bucket.recent.births += lineageEvent.births ?? 0;
+      bucket.recent.deaths += lineageEvent.deaths ?? 0;
+      bucket.recent.foodEaten += lineageEvent.foodEaten ?? 0;
+      bucket.recent.reproductions += lineageEvent.reproductions ?? 0;
+    }
+  }
+
+  return {
+    population,
+    windowSize: recentEvents.length,
+    overall: calculateLineageAverages(overallTotals, population),
+    lineages: [...lineageBuckets.values()]
+      .filter((lineage) => lineage.count > 0)
+      .sort((left, right) => right.count - left.count || left.id - right.id)
+      .slice(0, 5)
+      .map((lineage) => ({
+        id: lineage.id,
+        count: lineage.count,
+        percent: lineage.count / population,
+        averages: calculateLineageAverages(lineage.totals, lineage.count),
+        recent: {
+          ...lineage.recent,
+          netGrowth: lineage.recent.births - lineage.recent.deaths,
+        },
+      })),
+  };
+}
+
 export function dropFoodBatch(world, amount = 55) {
   let added = 0;
 
@@ -284,25 +352,59 @@ export function removeHalfFood(world) {
 
 export function applyEnvironmentalShock(world, deathRate = 0.3) {
   const removeCount = Math.round(world.creatures.length * deathRate);
+  const lifecycleEvent = createLifecycleEvent(world.tick);
 
   for (let index = 0; index < removeCount; index += 1) {
     const creatureIndex = Math.floor(Math.random() * world.creatures.length);
+    const creature = world.creatures[creatureIndex];
+
+    if (creature) {
+      recordLineageEvent(lifecycleEvent, getCreatureLineageId(creature), 'deaths');
+    }
+
     world.creatures.splice(creatureIndex, 1);
   }
 
   if (removeCount > 0) {
-    recordLifecycle(world, 0, removeCount);
+    recordLifecycle(world, lifecycleEvent);
   }
 
   return removeCount;
 }
 
-function recordLifecycle(world, births, deaths) {
-  world.lifecycleHistory.push({
-    tick: world.tick,
-    births,
-    deaths,
-  });
+function createLifecycleEvent(tick) {
+  return {
+    tick,
+    births: 0,
+    deaths: 0,
+    foodEaten: 0,
+    reproductions: 0,
+    lineages: {},
+  };
+}
+
+function recordLineageEvent(event, lineageId, type, amount = 1) {
+  if (!event || !Number.isFinite(Number(lineageId))) {
+    return;
+  }
+
+  const key = String(lineageId);
+
+  if (!event.lineages[key]) {
+    event.lineages[key] = {
+      births: 0,
+      deaths: 0,
+      foodEaten: 0,
+      reproductions: 0,
+    };
+  }
+
+  event[type] += amount;
+  event.lineages[key][type] += amount;
+}
+
+function recordLifecycle(world, event) {
+  world.lifecycleHistory.push(event);
 
   if (world.lifecycleHistory.length > MAX_LIFECYCLE_HISTORY_POINTS) {
     world.lifecycleHistory.splice(
@@ -312,7 +414,7 @@ function recordLifecycle(world, births, deaths) {
   }
 }
 
-function updateCreature(creature, world, deltaSeconds) {
+function updateCreature(creature, world, deltaSeconds, lifecycleEvent) {
   creature.age += deltaSeconds;
 
   const targetFood = findNearestVisibleFood(creature, world.foods);
@@ -350,8 +452,87 @@ function updateCreature(creature, world, deltaSeconds) {
     if (foodIndex !== -1) {
       world.foods.splice(foodIndex, 1);
       creature.energy += FOOD_ENERGY;
+      recordLineageEvent(
+        lifecycleEvent,
+        getCreatureLineageId(creature),
+        'foodEaten',
+      );
     }
   }
+}
+
+function getCreatureLineageId(creature) {
+  return creature.lineageId ?? creature.id;
+}
+
+function createLineageTotals() {
+  return {
+    speed: 0,
+    vision: 0,
+    reproductionThreshold: 0,
+    lifespan: 0,
+    mutationRate: 0,
+    energy: 0,
+    age: 0,
+  };
+}
+
+function createEmptyLineageAverages() {
+  return {
+    speed: 0,
+    vision: 0,
+    reproductionThreshold: 0,
+    lifespan: 0,
+    mutationRate: 0,
+    energy: 0,
+    age: 0,
+  };
+}
+
+function getLineageBucket(lineageBuckets, lineageId) {
+  const normalizedLineageId = Number(lineageId);
+
+  if (!lineageBuckets.has(normalizedLineageId)) {
+    lineageBuckets.set(normalizedLineageId, {
+      id: normalizedLineageId,
+      count: 0,
+      totals: createLineageTotals(),
+      recent: {
+        births: 0,
+        deaths: 0,
+        foodEaten: 0,
+        reproductions: 0,
+      },
+    });
+  }
+
+  return lineageBuckets.get(normalizedLineageId);
+}
+
+function addCreatureToLineageTotals(totals, creature) {
+  totals.speed += creature.speed;
+  totals.vision += creature.vision;
+  totals.reproductionThreshold += creature.reproductionThreshold;
+  totals.lifespan += creature.lifespan;
+  totals.mutationRate += creature.mutationRate;
+  totals.energy += creature.energy;
+  totals.age += creature.age;
+}
+
+function calculateLineageAverages(totals, count) {
+  if (count === 0) {
+    return createEmptyLineageAverages();
+  }
+
+  return {
+    speed: totals.speed / count,
+    vision: totals.vision / count,
+    reproductionThreshold: totals.reproductionThreshold / count,
+    lifespan: totals.lifespan / count,
+    mutationRate: totals.mutationRate / count,
+    energy: totals.energy / count,
+    age: totals.age / count,
+  };
 }
 
 function findNearestVisibleFood(creature, foods) {
