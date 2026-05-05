@@ -121,24 +121,14 @@ function drawCreatures(context, creatures, displayMode) {
       displayMode === 'lineage' &&
       (creature.lineageId ?? creature.id) === dominantLineageId;
 
+    if (isDominantLineage) {
+      drawDominantGlow(context, creature, creatureColor);
+    }
+
     context.beginPath();
     context.fillStyle = creatureColor;
     context.arc(creature.x, creature.y, CREATURE_RADIUS, 0, Math.PI * 2);
     context.fill();
-
-    if (isDominantLineage) {
-      context.beginPath();
-      context.strokeStyle = 'rgba(255, 255, 255, 0.92)';
-      context.lineWidth = 1.4;
-      context.arc(creature.x, creature.y, CREATURE_RADIUS + 2.2, 0, Math.PI * 2);
-      context.stroke();
-
-      context.beginPath();
-      context.strokeStyle = creatureColor;
-      context.lineWidth = 0.9;
-      context.arc(creature.x, creature.y, CREATURE_RADIUS + 3.8, 0, Math.PI * 2);
-      context.stroke();
-    }
 
     context.beginPath();
     context.fillStyle = 'rgba(255, 255, 255, 0.64)';
@@ -151,6 +141,26 @@ function drawCreatures(context, creatures, displayMode) {
     );
     context.fill();
   }
+}
+
+function drawDominantGlow(context, creature, creatureColor) {
+  context.save();
+  context.globalAlpha = 0.48;
+  context.shadowColor = creatureColor;
+  context.shadowBlur = 12;
+  context.strokeStyle = creatureColor;
+  context.lineWidth = 3.2;
+  context.beginPath();
+  context.arc(creature.x, creature.y, CREATURE_RADIUS + 4.6, 0, Math.PI * 2);
+  context.stroke();
+
+  context.globalAlpha = 0.26;
+  context.shadowBlur = 18;
+  context.lineWidth = 5.4;
+  context.beginPath();
+  context.arc(creature.x, creature.y, CREATURE_RADIUS + 5.6, 0, Math.PI * 2);
+  context.stroke();
+  context.restore();
 }
 
 function getCreatureColor(creature, displayMode, maxGeneration) {
