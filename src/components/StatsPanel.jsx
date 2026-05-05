@@ -21,7 +21,7 @@ export function StatsPanel({ stats }) {
   ];
 
   return (
-    <section className="panel-block" aria-label="模拟统计">
+    <section className="panel-block stats-panel" aria-label="模拟统计">
       <h2>统计数据</h2>
       <div className="stats-grid">
         {items.map(([label, value]) => (

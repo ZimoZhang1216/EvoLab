@@ -76,7 +76,7 @@ export function ControlsPanel({
   const environmentModes = Object.values(ENVIRONMENT_MODES);
 
   return (
-    <section className="panel-block" aria-label="模拟控制">
+    <section className="panel-block controls-panel" aria-label="模拟控制">
       <h2>控制面板</h2>
       <div className="button-row">
         <button type="button" onClick={onStart} disabled={isRunning}>
@@ -109,10 +109,13 @@ export function ControlsPanel({
         ))}
       </div>
 
-      <div className="display-mode-section">
-        <div className="section-heading">
-          <h3>画布显示</h3>
-        </div>
+      <details className="control-card display-mode-section">
+        <summary>
+          <span>画布显示</span>
+          <strong>
+            {displayModeOptions.find((mode) => mode.id === displayMode)?.label ?? '普通'}
+          </strong>
+        </summary>
 
         <div className="display-mode-grid">
           {displayModeOptions.map((mode) => (
@@ -130,16 +133,16 @@ export function ControlsPanel({
             </button>
           ))}
         </div>
-      </div>
+      </details>
 
-      <div className="environment-section">
-        <div className="section-heading">
-          <h3>环境模式</h3>
-          <span className="environment-current">
+      <details className="control-card environment-section">
+        <summary>
+          <span>环境模式</span>
+          <strong className="environment-current">
             {environmentState.label}
             {environmentState.seasonLabel ? ` · ${environmentState.seasonLabel}` : ''}
-          </span>
-        </div>
+          </strong>
+        </summary>
 
         <div className="environment-grid">
           {environmentModes.map((mode) => (
@@ -158,15 +161,15 @@ export function ControlsPanel({
             </button>
           ))}
         </div>
-      </div>
+      </details>
 
-      <div className="event-section">
-        <div className="section-heading">
-          <h3>实验事件</h3>
+      <details className="control-card event-section">
+        <summary>
+          <span>实验事件</span>
           {isMutationStormActive && (
             <span className="event-badge">突变风暴中</span>
           )}
-        </div>
+        </summary>
 
         <div className="event-grid">
           <button type="button" onClick={experimentEvents.dropFood}>
@@ -195,7 +198,7 @@ export function ControlsPanel({
             突变风暴
           </button>
         </div>
-      </div>
+      </details>
     </section>
   );
 }

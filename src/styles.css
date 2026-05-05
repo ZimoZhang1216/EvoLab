@@ -230,7 +230,7 @@ h3 {
 
 .simulation-panel {
   order: 1;
-  grid-column: span 8;
+  grid-column: span 7;
   overflow: hidden;
   padding: 6px;
 }
@@ -246,11 +246,7 @@ h3 {
 }
 
 .operation-panel {
-  order: 2;
-  display: grid;
-  grid-column: span 4;
-  gap: 10px;
-  align-content: start;
+  display: contents;
 }
 
 .monitor-row {
@@ -261,36 +257,46 @@ h3 {
   padding: 10px;
 }
 
-.steady-panel {
+.stats-panel {
+  order: 2;
+  grid-column: span 2;
+}
+
+.controls-panel {
   order: 3;
+  grid-column: span 3;
+}
+
+.steady-panel {
+  order: 4;
   grid-column: span 2;
 }
 
 .generation-panel {
-  order: 4;
+  order: 5;
   grid-column: span 3;
   max-height: 520px;
   overflow: auto;
 }
 
 .gene-panel {
-  order: 5;
+  order: 6;
   grid-column: span 7;
 }
 
 .lineage-advantage-panel {
-  order: 6;
+  order: 7;
   grid-column: span 8;
 }
 
 .mechanism-panel {
-  order: 7;
+  order: 8;
   grid-column: span 4;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -406,21 +412,70 @@ input[type='range']::-moz-range-thumb {
 }
 
 .event-section {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(105, 215, 255, 0.14);
+  margin-top: 7px;
 }
 
 .display-mode-section {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(105, 215, 255, 0.14);
+  margin-top: 7px;
 }
 
 .environment-section {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(105, 215, 255, 0.14);
+  margin-top: 7px;
+}
+
+.control-card {
+  border: 1px solid rgba(86, 132, 166, 0.34);
+  border-radius: 7px;
+  background: #0d1721;
+}
+
+.control-card summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 9px;
+  color: #d7f3ff;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.control-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.control-card summary::after {
+  color: #69d7ff;
+  content: '+';
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.control-card[open] summary {
+  border-bottom: 1px solid rgba(105, 215, 255, 0.12);
+}
+
+.control-card[open] summary::after {
+  content: '-';
+}
+
+.control-card summary strong {
+  min-width: 0;
+  color: #77e6ff;
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.display-mode-grid,
+.environment-grid,
+.event-grid {
+  padding: 8px;
 }
 
 .section-heading {
@@ -434,17 +489,17 @@ input[type='range']::-moz-range-thumb {
 .environment-current {
   border: 1px solid rgba(105, 215, 255, 0.24);
   border-radius: 999px;
-  padding: 3px 7px;
+  padding: 2px 6px;
   color: #77e6ff;
   background: rgba(105, 215, 255, 0.08);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
   white-space: nowrap;
 }
 
 .environment-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -499,7 +554,7 @@ input[type='range']::-moz-range-thumb {
 
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -1298,11 +1353,18 @@ input[type='range']::-moz-range-thumb {
   }
 
   .simulation-panel,
-  .operation-panel,
   .gene-panel,
   .lineage-advantage-panel,
   .mechanism-panel {
     grid-column: span 6;
+  }
+
+  .stats-panel {
+    grid-column: span 2;
+  }
+
+  .controls-panel {
+    grid-column: span 4;
   }
 
   .steady-panel {
@@ -1311,10 +1373,6 @@ input[type='range']::-moz-range-thumb {
 
   .generation-panel {
     grid-column: span 4;
-  }
-
-  .operation-panel {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   }
 
   .lineage-advantage-list {
@@ -1338,7 +1396,8 @@ input[type='range']::-moz-range-thumb {
   }
 
   .simulation-panel,
-  .operation-panel,
+  .stats-panel,
+  .controls-panel,
   .steady-panel,
   .generation-panel,
   .gene-panel,
@@ -1356,25 +1415,24 @@ input[type='range']::-moz-range-thumb {
     order: 1;
   }
 
-  .operation-panel {
+  .stats-panel {
     order: 2;
   }
 
-  .monitor-row {
+  .controls-panel {
     order: 3;
   }
 
-  .mechanism-panel {
+  .monitor-row {
     order: 4;
+  }
+
+  .mechanism-panel {
+    order: 8;
   }
 
   .monitor-row {
     grid-template-columns: 1fr;
-  }
-
-  .operation-panel {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .monitor-row .gene-grid {
@@ -1463,7 +1521,7 @@ input[type='range']::-moz-range-thumb {
   }
 
   .operation-panel {
-    display: flex;
+    display: contents;
   }
 
   .panel-block {
@@ -1550,8 +1608,8 @@ input[type='range']::-moz-range-thumb {
   .environment-section,
   .display-mode-section,
   .event-section {
-    margin-top: 9px;
-    padding-top: 8px;
+    margin-top: 7px;
+    padding-top: 0;
   }
 
   .section-heading {
@@ -1568,7 +1626,7 @@ input[type='range']::-moz-range-thumb {
     display: flex;
     gap: 5px;
     overflow-x: auto;
-    padding-bottom: 2px;
+    padding: 7px;
     scrollbar-width: none;
   }
 
