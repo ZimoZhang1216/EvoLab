@@ -209,7 +209,7 @@ h3 {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 10px;
   grid-auto-flow: dense;
-  align-items: stretch;
+  align-items: start;
 }
 
 .main-column,
@@ -221,6 +221,7 @@ h3 {
 .simulation-panel,
 .panel-block {
   min-width: 0;
+  align-self: start;
   border: 1px solid rgba(105, 215, 255, 0.18);
   border-radius: 8px;
   background: rgba(10, 16, 23, 0.92);
@@ -237,7 +238,7 @@ h3 {
 .simulation-canvas {
   display: block;
   width: 100%;
-  height: clamp(380px, 44vh, 520px);
+  height: clamp(340px, 38vh, 460px);
   min-height: 0;
   border: 1px solid rgba(105, 215, 255, 0.18);
   border-radius: 6px;
@@ -268,6 +269,8 @@ h3 {
 .generation-panel {
   order: 4;
   grid-column: span 3;
+  max-height: 520px;
+  overflow: auto;
 }
 
 .gene-panel {
@@ -1342,6 +1345,11 @@ input[type='range']::-moz-range-thumb {
   .lineage-advantage-panel,
   .mechanism-panel {
     grid-column: 1 / -1;
+  }
+
+  .generation-panel {
+    max-height: none;
+    overflow: visible;
   }
 
   .simulation-panel {
