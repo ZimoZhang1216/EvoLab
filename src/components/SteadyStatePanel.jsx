@@ -1,30 +1,37 @@
 const metricConfigs = [
   {
     key: 'population',
-    label: '种群数量变化趋势',
-    digits: 0,
   },
   {
     key: 'foodCount',
-    label: '食物数量变化趋势',
-    digits: 0,
   },
   {
     key: 'averageSpeed',
-    label: '平均速度变化趋势',
-    digits: 1,
   },
   {
     key: 'averageVision',
-    label: '平均视野变化趋势',
-    digits: 1,
   },
   {
     key: 'averageEnergy',
-    label: '平均能量变化趋势',
-    digits: 1,
   },
 ];
+
+const STABILITY_WINDOW_SIZE = 20;
+const MIN_STABLE_SAMPLE_COUNT = 12;
+const TREND_LIMITS = {
+  population: 0.42,
+  foodCount: 1.2,
+  averageSpeed: 0.12,
+  averageVision: 0.12,
+  averageEnergy: 0.34,
+};
+const VOLATILITY_LIMITS = {
+  population: 0.5,
+  foodCount: 1.4,
+  averageSpeed: 0.12,
+  averageVision: 0.12,
+  averageEnergy: 0.48,
+};
 
 const statusLabels = {
   steady: '接近稳态',
@@ -54,7 +61,7 @@ function standardDeviation(values) {
 }
 
 function analyzeMetric(history, key) {
-  const window = history.slice(-60);
+  const window = history.slice(-STABILITY_WINDOW_SIZE);
   const values = window
     .map((sample) => sample[key])
     .filter((value) => Number.isFinite(value));
@@ -100,24 +107,35 @@ function getSystemStatus(stats, history, trendAnalyses) {
     return 'endangered';
   }
 
-  if (history.length < 12) {
+  if (history.length < MIN_STABLE_SAMPLE_COUNT) {
     return 'evolving';
   }
 
-  const maxTrend = Math.max(
-    ...Object.values(trendAnalyses).map((analysis) =>
-      Math.abs(analysis.relativeChange),
-    ),
-  );
-  const maxVolatility = Math.max(
-    ...Object.values(trendAnalyses).map((analysis) => analysis.volatility),
-  );
+  const populationTrend = Math.abs(trendAnalyses.population.relativeChange);
+  const energyTrend = Math.abs(trendAnalyses.averageEnergy.relativeChange);
+  const populationVolatility = trendAnalyses.population.volatility;
+  const energyVolatility = trendAnalyses.averageEnergy.volatility;
 
-  if (maxVolatility > 0.32 || maxTrend > 0.42) {
+  if (
+    populationTrend > 0.9 ||
+    populationVolatility > 0.75 ||
+    energyTrend > 0.85 ||
+    energyVolatility > 0.68
+  ) {
     return 'volatile';
   }
 
-  if (maxTrend < 0.06 && maxVolatility < 0.16) {
+  const unstableMetrics = Object.entries(trendAnalyses).filter(
+    ([key, analysis]) =>
+      Math.abs(analysis.relativeChange) > TREND_LIMITS[key] ||
+      analysis.volatility > VOLATILITY_LIMITS[key],
+  );
+
+  if (unstableMetrics.length >= 3) {
+    return 'volatile';
+  }
+
+  if (unstableMetrics.length <= 1) {
     return 'steady';
   }
 
